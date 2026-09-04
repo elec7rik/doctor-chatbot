@@ -8,11 +8,13 @@ export function SideNav({
   onClose,
   onNewChat,
   onCall,
+  readAloud,
 }: {
   open: boolean;
   onClose: () => void;
   onNewChat: () => void;
   onCall?: () => void;
+  readAloud: { on: boolean; toggle: () => void };
 }) {
   return (
     <>
@@ -53,7 +55,7 @@ export function SideNav({
         </button>
         <div className="rail-history">Your recent chats will appear here.</div>
         <div className="rail-foot">
-          <ReadAloudSwitch />
+          <ReadAloudSwitch checked={readAloud.on} onChange={readAloud.toggle} />
           <div className="rail-foot-links">
             <a className="rail-link" href="/guides">
               Guides
