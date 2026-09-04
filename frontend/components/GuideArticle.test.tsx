@@ -21,4 +21,9 @@ describe("GuideArticle", () => {
     const ld = container.querySelector('script[type="application/ld+json"]');
     expect(ld?.textContent).toContain("Article");
   });
+  it("exposes the class hooks the Iris CSS targets", () => {
+    const { container } = render(<GuideArticle guide={getGuide("hair-loss")!} />);
+    expect(container.querySelector(".guide-top")).toBeTruthy();
+    expect(container.querySelector(".guide-body .funnel, .guide-body .lede")).toBeTruthy();
+  });
 });
