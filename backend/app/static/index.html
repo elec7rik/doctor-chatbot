@@ -193,7 +193,8 @@ textarea::placeholder{color:var(--ink-3)}
 .lc-sub{font-size:12.5px; color:var(--ink-3)}
 .lc-go{flex:none; color:var(--ink-3)}
 .lc-go svg{width:18px; height:18px}
-.msg.bot .b:has(.linkcard){padding:0; background:transparent; border:0; box-shadow:none}
+.msg.bot .b:has(.linkcard:only-child){padding:0; background:transparent; border:0; box-shadow:none}
+.msg .b .linkcard:not(:first-child){margin-top:10px}
 </style>
 </head>
 <body>
@@ -300,6 +301,16 @@ const sendBtn = document.getElementById("send");
 
 /* ---------- tiny, safe markdown ---------- */
 const BRANDS = ["my-peptides.co.uk","mypeptideslabs.com","thenad.co.uk","imnatura.co.uk"];
+const GUIDE_SUB = "My Longevity Hub guide";
+const GUIDES = {
+  "better-sleep":{title:"How to Sleep Better, Naturally"},
+  "why-am-i-always-tired":{title:"Why Am I Always Tired?"},
+  "what-supplements-to-take":{title:"What Supplements Should You Actually Take?"},
+  "skincare":{title:"Skincare That Actually Works"},
+  "hair-loss":{title:"Hair Loss and Hair Growth"},
+  "testosterone":{title:"Low Testosterone: Signs \u0026 What Helps"},
+  "menopause":{title:"Menopause \u0026 Perimenopause"}
+};
 function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 function inline(s){
   s = esc(s)
@@ -386,7 +397,7 @@ async function send(text){
       const iv = setInterval(() => {
         if (shown < full.length){
           shown = Math.min(full.length, shown + Math.max(2, Math.ceil((full.length - shown) / 10)));
-          b.innerHTML = render(stripDisclaimer(full.slice(0, shown)));
+          b.innerHTML = render(stripDisclaimer(stripGuideTokens(full.slice(0, shown))));
           scroll.scrollTop = scroll.scrollHeight;
         }
         if (!streaming && shown >= full.length){ clearInterval(iv); resolve(); }
@@ -400,10 +411,12 @@ async function send(text){
     full += dec.decode();
     streaming = false;
     await revealDone;
-    b.innerHTML = render(stripDisclaimer(full));
+    b.innerHTML = render(stripDisclaimer(stripGuideTokens(full)));
+    const sayText = b.textContent;                   // article text only (cards excluded)
+    appendGuideCards(b, full);
     history.push({ role:"user", text }, { role:"model", text:full });
     saveHistory();
-    speak(b.textContent);                            // read aloud once the full reply is in
+    speak(sayText);                            // read aloud once the full reply is in
   } catch (err){
     typing.remove();
     addMsg("bot", '<p>Sorry — I couldn’t reach the professor just now. Is the server running? <span style="color:var(--ink-3)">('+esc(String(err.message||err))+')</span></p>');
@@ -648,6 +661,16 @@ function cardEl(m){
   a.querySelector(".lc-sub").textContent = (m.subtitle ? m.subtitle + " \u00b7 " : "") + "Tap to open";
   return a;
 }
+function stripGuideTokens(t){
+  return t.replace(/\[\[guide:[a-z0-9-]*\]\]/gi,"")   // complete markers
+          .replace(/\s*\[\[[^\]]*$/,"")               // trailing partial marker mid-stream
+          .replace(/\n{3,}/g,"\n\n").trim();
+}
+function appendGuideCards(el, text){
+  const seen=[], re=/\[\[guide:([a-z0-9-]+)\]\]/gi; let m;
+  while ((m=re.exec(text))){ const s=m[1].toLowerCase(); if (GUIDES[s] && !seen.includes(s)) seen.push(s); }
+  for (const s of seen) el.appendChild(cardEl({ url:"/guides/"+s, title:GUIDES[s].title, subtitle:GUIDE_SUB }));
+}
 function showCard(m){
   firstMessageCleanup();
   addMsg("bot", "").querySelector(".b").appendChild(cardEl(m));   // persists in the thread
@@ -767,7 +790,7 @@ function restore(){
   firstMessageCleanup();
   for (const t of history){
     if (t.role === "user") addMsg("user", esc(t.text).replace(/\n/g,"<br>"));
-    else addMsg("bot", render(stripDisclaimer(t.text)));
+    else { const w = addMsg("bot", render(stripDisclaimer(stripGuideTokens(t.text)))); appendGuideCards(w.querySelector(".b"), t.text); }
   }
 }
 restore();

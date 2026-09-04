@@ -19,9 +19,13 @@ from .gcp_auth import access_token
 from .guardrails import check_emergency
 from .prompt import SYSTEM_PROMPT
 from .sanitize import sanitize_text
+from . import guides
 
 # Behaviour (prompt) + knowledge (catalogue), assembled once.
-SYSTEM = SYSTEM_PROMPT + "\n\n" + build_catalogue_block()
+SYSTEM = SYSTEM_PROMPT + "\n\n" + build_catalogue_block() + "\n\n" + guides.build_guides_block()
+# Text chat also gets the [[guide:slug]] marker rule; the voice path (live.py)
+# uses SYSTEM without it and drives guide cards through a tool instead.
+SYSTEM_TEXT = SYSTEM + guides.TEXT_GUIDE_RULE
 
 
 class _GcloudCLICredentials(ga_credentials.Credentials):
@@ -76,7 +80,7 @@ def process_message(history, user_message):
         model=settings.GEMINI_MODEL,
         contents=_to_contents(history, user_message),
         config=types.GenerateContentConfig(
-            system_instruction=SYSTEM,
+            system_instruction=SYSTEM_TEXT,
             temperature=settings.TEMPERATURE,
             max_output_tokens=settings.MAX_OUTPUT_TOKENS,
         ),
@@ -102,7 +106,7 @@ def stream_message(history, user_message):
         model=settings.GEMINI_MODEL,
         contents=_to_contents(history, user_message),
         config=types.GenerateContentConfig(
-            system_instruction=SYSTEM,
+            system_instruction=SYSTEM_TEXT,
             temperature=settings.TEMPERATURE,
             max_output_tokens=settings.MAX_OUTPUT_TOKENS,
         ),

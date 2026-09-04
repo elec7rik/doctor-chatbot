@@ -26,6 +26,7 @@ from .catalogue import load_catalogue
 from .config import settings
 from .guardrails import check_emergency
 from .sanitize import sanitize_text
+from . import guides
 
 _VOICE_ADDENDUM = (
     "\n\n## THIS IS A LIVE VOICE CALL — how to speak\n"
@@ -43,6 +44,10 @@ _VOICE_ADDENDUM = (
     "name (for example 'BPC-157'). Then simply tell them out loud that you've popped it up on their screen — "
     "for example \"I've put My Peptides up on your screen for you.\" One card per answer, the same one-pointer "
     "rule as above, and only when a brand genuinely fits and the compliance rules allow it.\n"
+    "- We also publish our own free educational guides on this site (listed above). When one genuinely fits "
+    "the question, CALL THE show_guide_card TOOL with the guide's slug (for example 'better-sleep') to put a "
+    "tappable guide card on the caller's screen, then mention it out loud — for example \"I've popped our "
+    "sleep guide on your screen.\" Prefer a guide for general, educational questions; keep it to one card.\n"
     "- Never invent a link, and never say \"mylongevityhub.com\" or turn the platform's name into a web address "
     "— My Longevity Hub is simply the site they are already on.\n"
     "- Do NOT speak any written disclaimer footer, and never say the words \"The Nutty Professor is an AI "
@@ -167,6 +172,30 @@ _LINK_TOOL = types.Tool(
 )
 
 
+_GUIDE_TOOL = types.Tool(
+    function_declarations=[
+        types.FunctionDeclaration(
+            name="show_guide_card",
+            description=(
+                "Show a tappable card linking one of My Longevity Hub's own educational guides on the caller's "
+                "screen. Call this when a guide listed in your instructions fits the question, then tell the "
+                "caller out loud that you've put it on their screen."
+            ),
+            parameters=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "guide": types.Schema(
+                        type=types.Type.STRING,
+                        description="The guide slug, e.g. 'better-sleep', 'testosterone', 'menopause'.",
+                    ),
+                },
+                required=["guide"],
+            ),
+        )
+    ]
+)
+
+
 def live_config() -> types.LiveConnectConfig:
     return types.LiveConnectConfig(
         response_modalities=["AUDIO"],
@@ -181,7 +210,7 @@ def live_config() -> types.LiveConnectConfig:
         realtime_input_config=types.RealtimeInputConfig(
             automatic_activity_detection=types.AutomaticActivityDetection(disabled=True)
         ),
-        tools=[_LINK_TOOL],
+        tools=[_LINK_TOOL, _GUIDE_TOOL],
         system_instruction=system_instruction(),
     )
 
@@ -234,7 +263,10 @@ async def relay(ws) -> None:
                             if tc and getattr(tc, "function_calls", None):
                                 fresp = []
                                 for fc in tc.function_calls:
-                                    card = _resolve_card(dict(fc.args or {}))
+                                    if fc.name == "show_guide_card":
+                                        card = guides.resolve_guide(str((fc.args or {}).get("guide", "")))
+                                    else:
+                                        card = _resolve_card(dict(fc.args or {}))
                                     if card and not guard["tripped"]:
                                         await _send(ws, {"type": "card", **card})
                                     fresp.append(

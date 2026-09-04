@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, WebSocket
@@ -26,6 +27,17 @@ def _client_ip(request: Request) -> str:
 @app.get("/")
 def index():
     return FileResponse(STATIC / "index.html")
+
+
+@app.get("/guides/{slug}")
+def guide(slug: str):
+    """Serve a static My Longevity Hub guide page (educational content)."""
+    if not re.fullmatch(r"[a-z0-9-]{1,64}", slug):
+        raise HTTPException(status_code=404, detail="Not found")
+    path = STATIC / "guides" / f"{slug}.html"
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(path, media_type="text/html")
 
 
 class Turn(BaseModel):
