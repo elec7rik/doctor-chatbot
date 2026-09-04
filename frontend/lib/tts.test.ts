@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { splitHead, fetchTTS } from "./tts";
+import { splitHead, fetchTTS, browserSpeak } from "./tts";
 
 const realFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = realFetch; vi.restoreAllMocks(); });
@@ -14,6 +14,12 @@ describe("splitHead", () => {
     expect(head.length).toBeGreaterThan(0);
     expect(tail.length).toBeGreaterThan(0);
     expect((head + " " + tail).replace(/\s+/g, " ").trim()).toBe(long.replace(/\s+/g, " ").trim());
+  });
+});
+
+describe("browserSpeak", () => {
+  it("no-ops without speechSynthesis and does not throw", () => {
+    expect(() => browserSpeak("hi")).not.toThrow();
   });
 });
 

@@ -25,6 +25,14 @@ export function downsampleTo16k(input: Float32Array, inputRate: number): Int16Ar
   return out;
 }
 
+/** Convert a 16-bit PCM ArrayBuffer to normalised Float32 samples. */
+export function pcm16ToFloat32(buf: ArrayBuffer): Float32Array {
+  const i16 = new Int16Array(buf);
+  const f32 = new Float32Array(i16.length);
+  for (let i = 0; i < i16.length; i++) f32[i] = i16[i]! / 32768;
+  return f32;
+}
+
 interface AudioWindow extends Window {
   webkitAudioContext?: typeof AudioContext;
 }
@@ -42,6 +50,8 @@ class SharedMic {
   capturing = false;
   sink: ((frame: Int16Array) => void) | null = null;
   errName = "";
+  private playHead = 0;
+  private sources = new Set<AudioBufferSourceNode>();
 
   async open(): Promise<boolean> {
     if (this.s.stream) return true;
@@ -72,7 +82,32 @@ class SharedMic {
     return true;
   }
 
+  /** Play a 24 kHz mono 16-bit PCM chunk through the shared context, gaplessly. */
+  play24k(buf: ArrayBuffer): void {
+    const ctx = this.s.ctx;
+    if (!ctx) return;
+    const f32 = pcm16ToFloat32(buf);
+    const ab = ctx.createBuffer(1, f32.length, 24000);
+    ab.getChannelData(0).set(f32);
+    const src = ctx.createBufferSource();
+    src.buffer = ab;
+    src.connect(ctx.destination);
+    const t = Math.max(ctx.currentTime, this.playHead);
+    src.start(t);
+    this.playHead = t + ab.duration;
+    this.sources.add(src);
+    src.onended = () => this.sources.delete(src);
+  }
+
+  /** Barge-in: stop everything queued and reset the play head. */
+  flushOutput(): void {
+    for (const s of this.sources) { try { s.stop(); } catch { /* ignore */ } }
+    this.sources.clear();
+    this.playHead = this.s.ctx ? this.s.ctx.currentTime : 0;
+  }
+
   close(): void {
+    this.flushOutput();
     try { this.s.proc?.disconnect(); } catch { /* ignore */ }
     try { this.s.src?.disconnect(); } catch { /* ignore */ }
     try { this.s.stream?.getTracks().forEach((t) => t.stop()); } catch { /* ignore */ }

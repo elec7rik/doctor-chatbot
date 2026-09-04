@@ -225,3 +225,37 @@
 }
 @keyframes record-pulse{0%,100%{box-shadow:0 0 0 0 rgba(229,72,77,.42)}50%{box-shadow:0 0 0 6px rgba(229,72,77,0)}}
 @media (prefers-reduced-motion:reduce){ .mic.recording{animation:none} }
+
+@layer components {
+  .voice-stage{position:fixed; inset:0; z-index:50; display:flex; flex-direction:column; align-items:center;
+    background:radial-gradient(120% 80% at 50% 32%, var(--color-iris-50), var(--color-bg) 62%);
+    padding:0 20px max(18px,env(safe-area-inset-bottom)); animation:vs-in 320ms var(--ease,ease)}
+  .vs-bar{width:100%; max-width:560px; height:56px; display:flex; align-items:center; justify-content:space-between}
+  .vs-timer{color:var(--color-ink-3); font-variant-numeric:tabular-nums; font-size:14px}
+  .vs-x{width:44px; height:44px; display:grid; place-items:center; border-radius:var(--radius-full); border:1px solid var(--color-line); background:var(--color-surface); color:var(--color-ink-2); cursor:pointer}
+  .vs-disclaimer{max-width:560px; text-align:center; color:var(--color-ink-3); font-size:12px; margin:0 0 8px}
+  .vs-middle{flex:1; width:100%; max-width:480px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; overflow-y:auto}
+  .vs-status{font-size:16px; font-weight:600; color:var(--color-ink-2); text-align:center; margin:0}
+  .vs-cards{width:100%; display:flex; flex-direction:column; gap:10px}
+  .voice-note{padding:12px 14px; border-radius:var(--radius-lg,16px); background:var(--color-surface); border:1px solid var(--color-line); color:var(--color-ink); font-size:14px}
+  .vs-foot{width:100%; max-width:480px; display:flex; flex-direction:column; align-items:center; gap:8px; padding-top:12px}
+  .talk-btn{width:100%; max-width:420px; min-height:64px; display:flex; align-items:center; justify-content:center; gap:10px;
+    border-radius:var(--radius-xl,22px); border:1px solid var(--color-line); background:var(--color-surface); color:var(--color-ink);
+    font-size:16px; font-weight:600; cursor:pointer; touch-action:none; user-select:none; -webkit-touch-callout:none}
+  .talk-btn:disabled{opacity:.55; cursor:default}
+  .talk-btn.on{background:var(--color-iris-600); border-color:transparent; color:#fff; animation:hold-pulse 1.6s infinite}
+  .talk-btn.leveled{box-shadow:0 0 0 calc(2px + var(--lvl,0) * 10px) rgba(91,75,214,.20)}
+  .talk-dot{width:12px; height:12px; border-radius:50%; background:currentColor}
+  .vs-hint{min-height:1.1em; color:var(--color-ink-2); font-size:13.5px; text-align:center; margin:0}
+  .vs-type{background:none; border:0; color:var(--color-ink-3); font-size:14px; text-decoration:underline; cursor:pointer}
+  .stage-orb{width:clamp(150px,46vw,210px); margin:0 auto}
+  .orb.orb-desat{filter:saturate(.55) brightness(.98)}
+  .orb.orb-frozen .orb-glow,.orb.orb-frozen .orb-ring,.orb.orb-frozen .orb-core{animation:none!important}
+  .call-receipt{margin:14px 0}
+  .cr-divider{display:flex; align-items:center; gap:10px; color:var(--color-ink-3); font-size:12.5px}
+  .cr-divider::before,.cr-divider::after{content:""; flex:1; height:1px; background:var(--color-line)}
+}
+@keyframes vs-in{from{opacity:0; transform:translateY(12px)} to{opacity:1; transform:none}}
+@keyframes hold-pulse{0%,100%{box-shadow:0 0 0 0 rgba(91,75,214,.40)}50%{box-shadow:0 0 0 8px rgba(91,75,214,0)}}
+@media (min-width:1024px){ .stage-orb{width:240px} .vs-status{font-size:17px} }
+@media (prefers-reduced-motion:reduce){ .voice-stage{animation:none} .talk-btn.on{animation:none} .talk-btn.leveled{box-shadow:none} }

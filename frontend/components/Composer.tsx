@@ -81,7 +81,10 @@ export function Composer({
             aria-label="Call the professor"
             disabled={!onCall}
             title={onCall ? "Call the professor" : "Voice mode coming soon"}
-            onClick={onCall}
+            onClick={() => {
+              if (dictation.listening) void dictation.toggle();
+              onCall?.();
+            }}
           >
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 12h2" />

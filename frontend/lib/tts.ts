@@ -41,6 +41,16 @@ export interface Speaker {
   stop(): void;
 }
 
+/** Speak a line with the browser voice (used for the guardrail safety message on a call). */
+export function browserSpeak(text: string): void {
+  if (!canBrowserTTS || !text) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const gb = (window.speechSynthesis.getVoices() || []).find((v) => /en-GB/i.test(v.lang));
+  if (gb) u.voice = gb;
+  window.speechSynthesis.speak(u);
+}
+
 export function createSpeaker(): Speaker {
   let curAudio: HTMLAudioElement | null = null;
   let curAbort: AbortController | null = null;

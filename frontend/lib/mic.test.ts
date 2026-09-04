@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rms, downsampleTo16k } from "./mic";
+import { rms, downsampleTo16k, pcm16ToFloat32 } from "./mic";
 
 describe("mic DSP helpers", () => {
   it("rms of a constant signal equals its magnitude", () => {
@@ -20,5 +20,15 @@ describe("mic DSP helpers", () => {
     const out = downsampleTo16k(new Float32Array(64).fill(-1), 16000);
     expect(out[0]).toBe(-32768); // -1.0 -> -0x8000
     expect(out.length).toBe(64); // already 16k -> ratio 1
+  });
+});
+
+describe("pcm16ToFloat32", () => {
+  it("maps int16 samples to [-1, 1) floats", () => {
+    const i16 = new Int16Array([0, 32767, -32768]);
+    const f = pcm16ToFloat32(i16.buffer);
+    expect(f[0]).toBeCloseTo(0, 5);
+    expect(f[1]).toBeCloseTo(0.99997, 4);
+    expect(f[2]).toBe(-1);
   });
 });
