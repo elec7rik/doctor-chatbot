@@ -83,22 +83,22 @@ body{
 }
 .hero-in{max-width:780px; margin:0 auto; width:100%; padding:12px 18px}
 .hrow{display:flex; align-items:center; justify-content:space-between; gap:12px}
-.lockup{display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-width:0}
+.lockup{display:flex; align-items:center; gap:10px; min-width:0; flex:1 1 auto}
 .mark{flex:none; color:var(--accent); display:grid; place-items:center}
 .mark svg{display:block; width:26px; height:auto}
-.wordmark{font-weight:800; font-size:.8rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink); white-space:nowrap}
+.wordmark{font-weight:800; font-size:.8rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0}
 .pill{font-size:9.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--iris-700);
   background:var(--iris-50); border:1px solid var(--iris-100); border-radius:var(--r-full); padding:3px 9px; white-space:nowrap}
 :root[data-theme="dark"] .pill{color:var(--iris-300); background:rgba(109,93,232,.16); border-color:rgba(109,93,232,.3)}
 .rule{width:26px; height:2px; border-radius:2px; background:var(--accent); margin:11px 0 7px}
 .disc{font-size:11.5px; line-height:1.5; color:var(--ink-3); max-width:64ch; text-wrap:pretty}
 .disc strong{color:var(--ink-2); font-weight:600}
-.actions{display:flex; align-items:center; gap:7px}
+.actions{display:flex; align-items:center; gap:7px; flex:none}
 .readaloud,.ghostbtn,.themetoggle{display:inline-flex; align-items:center; gap:6px; flex:none; font:inherit; font-size:12.5px;
   font-weight:600; cursor:pointer; white-space:nowrap; color:var(--ink-2); background:var(--surface);
   border:1px solid var(--line); border-radius:var(--r-full); padding:8px 12px; box-shadow:var(--sh-sm);
   transition:color var(--dur-base), border-color var(--dur-base), background var(--dur-base), scale var(--dur-fast)}
-.readaloud svg,.themetoggle svg{width:16px; height:16px}
+.readaloud svg,.themetoggle svg,.ghostbtn svg{width:16px; height:16px}
 .readaloud:hover,.ghostbtn:hover,.themetoggle:hover{color:var(--accent); border-color:var(--accent)}
 .readaloud:active,.ghostbtn:active,.themetoggle:active{scale:.95}
 .readaloud.on{background:var(--accent); border-color:var(--accent); color:#fff; box-shadow:0 6px 16px -8px rgba(91,75,214,.7)}
@@ -108,7 +108,7 @@ body{
 .themetoggle .to-light{display:none}
 :root[data-theme="dark"] .themetoggle .to-dark{display:none}
 :root[data-theme="dark"] .themetoggle .to-light{display:inline}
-@media (max-width:560px){ .pill{display:none} .readaloud span{display:none} .readaloud{padding:8px 10px} .ghostbtn{padding:8px 10px} .hero-in{padding:11px 14px} }
+@media (max-width:560px){ .pill{display:none} .readaloud span,.ghostbtn span{display:none} .actions{gap:6px} .readaloud,.ghostbtn,.themetoggle{padding:7px 9px} .wordmark{font-size:.66rem; letter-spacing:.04em} .hero-in{padding:11px 14px} }
 
 /* ---------- messages ---------- */
 .scroll{flex:1; overflow-y:auto; padding:22px 18px; -webkit-overflow-scrolling:touch}
@@ -263,7 +263,10 @@ textarea::placeholder{color:var(--ink-4)}
             <svg class="to-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
             <svg class="to-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
           </button>
-          <button class="ghostbtn" id="newChat" title="Start a new conversation">New chat</button>
+          <button class="ghostbtn" id="newChat" title="Start a new conversation" aria-label="Start a new conversation">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            <span>New chat</span>
+          </button>
           <button class="readaloud" id="readAloud" aria-pressed="false" title="Read answers aloud">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/>
