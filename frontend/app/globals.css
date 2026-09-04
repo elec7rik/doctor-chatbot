@@ -98,9 +98,9 @@
   .welcome .big{font-size:1.6rem; font-weight:800; letter-spacing:-.024em; line-height:1.14; color:var(--color-ink); text-wrap:balance}
   .welcome .big .kw{background:var(--grad-greeting); -webkit-background-clip:text; background-clip:text; color:transparent}
   .welcome p{color:var(--color-ink-2); margin:.7em 0 0; font-size:14.5px; text-wrap:pretty}
-  .chips{display:flex; flex-wrap:wrap; gap:9px; justify-content:center; max-width:420px; margin:0 auto}
-  .chip{font:inherit; font-size:13.5px; cursor:pointer; color:var(--color-ink); background:var(--color-surface); border:1px solid var(--color-line); border-radius:var(--radius-lg); padding:10px 14px; box-shadow:var(--shadow-sm); transition:border-color var(--dur-base), color var(--dur-base)}
-  .chip:hover{border-color:var(--color-accent); color:var(--color-accent-ink)}
+  .chips{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:440px; margin:28px auto 0}
+  .chip{font:inherit; font-size:14px; cursor:pointer; color:var(--color-ink); background:var(--color-surface); border:1px solid var(--color-line); border-radius:var(--radius-lg); padding:13px 18px; min-height:44px; box-shadow:var(--shadow-sm); transition:border-color var(--dur-base), color var(--dur-base), box-shadow var(--dur-base), scale var(--dur-fast)}
+  .chip:hover{border-color:var(--color-accent); color:var(--color-accent-ink); box-shadow:var(--shadow-md)}
   .chip:active{scale:.96}
 
   /* orb */
