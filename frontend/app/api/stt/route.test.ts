@@ -7,7 +7,7 @@ beforeEach(() => { process.env.BACKEND_URL = "http://backend.test"; });
 
 function req(bytes: Uint8Array) {
   return new Request("http://localhost/api/stt", {
-    method: "POST", headers: { "content-type": "application/octet-stream" }, body: bytes,
+    method: "POST", headers: { "content-type": "application/octet-stream" }, body: bytes as unknown as BodyInit,
   });
 }
 
