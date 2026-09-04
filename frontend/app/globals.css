@@ -162,6 +162,60 @@
   .foot{text-align:center; font-size:11px; letter-spacing:.01em; color:var(--color-ink-3); margin:10px auto 0; max-width:780px; text-wrap:pretty}
 }
 
+@layer components {
+  /* shell */
+  .app{display:flex; height:100dvh; width:100%}
+  .main{flex:1; min-width:0; display:flex; flex-direction:column; height:100dvh}
+  .scroll{flex:1; overflow-y:auto; padding:22px 18px; -webkit-overflow-scrolling:touch}
+  .thread{display:flex; flex-direction:column; gap:16px; width:100%; max-width:780px; margin:0 auto}
+  .disc{margin:0 auto 18px}
+  .thread-cards{width:100%}
+
+  /* header (mobile; hidden at lg where the rail carries the lockup) */
+  .hero{position:sticky; top:0; z-index:20; padding:12px 16px; border-bottom:1px solid var(--color-line);
+    background:color-mix(in srgb, var(--color-bg) 80%, transparent); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px)}
+  .hero-row{display:flex; align-items:center; gap:10px}
+  .mark{flex:none; color:var(--color-accent); display:grid; place-items:center}
+  .mark svg{display:block; width:26px; height:auto}
+  .wordmark{font-weight:800; font-size:.78rem; letter-spacing:.12em; text-transform:uppercase; color:var(--color-ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0}
+  .spacer{flex:1}
+  .icon-btn{flex:none; display:inline-grid; place-items:center; width:44px; height:44px; border-radius:var(--radius-full); border:1px solid var(--color-line); background:var(--color-surface); color:var(--color-ink-2); box-shadow:var(--shadow-sm); cursor:pointer; transition:color var(--dur-base), border-color var(--dur-base)}
+  .icon-btn:hover{color:var(--color-accent); border-color:var(--color-accent)}
+
+  /* side nav: drawer < lg, persistent rail >= lg */
+  .sidenav{position:fixed; inset:0 auto 0 0; z-index:40; width:280px; max-width:84vw; display:flex; flex-direction:column; padding:16px;
+    background:var(--color-surface); border-right:1px solid var(--color-line); box-shadow:var(--shadow-lg);
+    transform:translateX(-100%); transition:transform var(--dur-base) var(--ease)}
+  .sidenav.open{transform:none}
+  .sidenav-backdrop{position:fixed; inset:0; z-index:39; background:rgba(20,18,45,.35); opacity:0; pointer-events:none; transition:opacity var(--dur-base)}
+  .sidenav-backdrop.open{opacity:1; pointer-events:auto}
+  .rail-lockup{display:flex; align-items:center; gap:10px; padding:6px 8px 14px}
+  .nav-row{display:flex; align-items:center; gap:10px; width:100%; padding:11px 12px; margin-bottom:4px; border-radius:var(--radius-md); border:1px solid transparent; background:transparent; color:var(--color-ink); font:inherit; font-size:14px; font-weight:600; cursor:pointer; text-align:left; text-decoration:none; transition:background var(--dur-base), border-color var(--dur-base)}
+  .nav-row:hover{background:var(--color-surface-2)}
+  .nav-row.primary{border-color:var(--color-line); background:var(--color-surface); box-shadow:var(--shadow-sm)}
+  .nav-row:disabled{opacity:.5; cursor:not-allowed}
+  .nav-row svg{width:18px; height:18px; flex:none}
+  .rail-history{flex:1; min-height:0; overflow-y:auto; padding:14px 8px; color:var(--color-ink-3); font-size:12.5px; line-height:1.5}
+  .rail-foot{margin-top:auto; padding-top:12px; border-top:1px solid var(--color-line); display:flex; flex-direction:column; gap:4px}
+  .switch-row{display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; padding:10px 12px; border-radius:var(--radius-md); border:0; background:transparent; color:var(--color-ink); font:inherit; font-size:14px; font-weight:600; cursor:pointer}
+  .switch-row:hover{background:var(--color-surface-2)}
+  .switch{flex:none; width:38px; height:22px; border-radius:var(--radius-full); background:var(--color-line); position:relative; transition:background var(--dur-base)}
+  .switch .knob{position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:var(--shadow-sm); transition:transform var(--dur-base)}
+  .switch.on{background:var(--color-accent)}
+  .switch.on .knob{transform:translateX(16px)}
+  .rail-foot-links{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 12px 2px}
+  .rail-link{color:var(--color-ink-2); font-size:13px; font-weight:600; text-decoration:none}
+  .rail-link:hover{color:var(--color-accent)}
+
+  @media (min-width:1024px){
+    .hero{display:none}
+    .sidenav{position:static; transform:none; flex:none; box-shadow:none; max-width:280px}
+    .sidenav-backdrop{display:none}
+    .scroll{padding:28px 24px}
+  }
+}
+
 @media (prefers-reduced-motion:reduce){
   .orb .orb-glow,.orb .orb-ring,.orb .orb-core,.typing i{animation:none!important}
+  .sidenav{transition:none}
 }

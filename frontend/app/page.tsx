@@ -1,3 +1,5 @@
+import { ChatShell } from "@/components/ChatShell";
+
 export default function Page() {
-  return <main>Chat coming online.</main>;
+  return <ChatShell />;
 }
