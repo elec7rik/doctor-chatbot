@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useChat } from "@/lib/useChat";
 import { useReadAloud } from "@/lib/useReadAloud";
 import { useVoiceCall } from "@/lib/useVoiceCall";
@@ -48,24 +48,24 @@ export function ChatShell() {
           <Disclaimer />
           <div className="thread">
             {!started && <Welcome onChip={send} />}
-            {messages.map((m, i) =>
-              m.role === "bot" && m.html === "" ? (
-                <Message key={i} role="bot">
-                  <TypingDots />
-                </Message>
-              ) : (
-                <Message key={i} role={m.role} html={m.html} />
-              ),
-            )}
-            {messages.flatMap((m, i) =>
-              m.guideSlugs
-                .filter((s) => guideTitle(s))
-                .map((s) => (
-                  <div className="thread-cards" key={`${i}-${s}`}>
-                    <LinkCard href={`/guides/${s}`} title={guideTitle(s)!} subtitle="My Longevity Hub guide" />
-                  </div>
-                )),
-            )}
+            {messages.map((m, i) => (
+              <Fragment key={i}>
+                {m.role === "bot" && m.html === "" ? (
+                  <Message role="bot">
+                    <TypingDots />
+                  </Message>
+                ) : (
+                  <Message role={m.role} html={m.html} />
+                )}
+                {m.guideSlugs
+                  .filter((s) => guideTitle(s))
+                  .map((s) => (
+                    <div className="thread-cards" key={`${i}-${s}`}>
+                      <LinkCard href={`/guides/${s}`} title={guideTitle(s)!} subtitle="My Longevity Hub guide" />
+                    </div>
+                  ))}
+              </Fragment>
+            ))}
             {receipts.map((r, i) => (
               <CallReceipt key={`r-${r.ts}-${i}`} receipt={r} />
             ))}
