@@ -42,5 +42,27 @@ export async function POST(request: Request): Promise<Response> {
   const sid = upstream.headers.get("X-Session-Id");
   if (sid) headers.set("X-Session-Id", sid);
 
-  return new Response(upstream.body, { status: 200, headers });
+  // Pump the upstream stream manually rather than returning `upstream.body`
+  // directly: piping an undici response body straight into a Next Response can
+  // throw "failed to pipe response / terminated" on the Node runtime.
+  const reader = upstream.body.getReader();
+  const stream = new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      try {
+        const { done, value } = await reader.read();
+        if (done) {
+          controller.close();
+          return;
+        }
+        controller.enqueue(value);
+      } catch (err) {
+        controller.error(err);
+      }
+    },
+    cancel(reason) {
+      void reader.cancel(reason);
+    },
+  });
+
+  return new Response(stream, { status: 200, headers });
 }
