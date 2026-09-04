@@ -1,0 +1,12 @@
+**/.venv/
+**/__pycache__/
+**/*.pyc
+.env
+.git/
+.gitignore
+.DS_Store
+eval/
+content-plan.html
+backend/README.md
+backend/http_test.py
+backend/smoke_test.py

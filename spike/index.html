@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Call the Professor — latency harness</title>
+<style>
+  :root{--bg:#0b0f14;--panel:#121a23;--line:#232e39;--txt:#e9eef3;--dim:#7c8894;--blue:#1789da;--ok:#7dd38b;--warn:#f0b35a;--bad:#ef6a6a}
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);margin:0;padding:22px;max-width:980px}
+  h2{margin:0 0 4px}
+  .hint{color:var(--dim);font-size:13px;margin:0 0 14px}
+  button{font:inherit;padding:10px 18px;border-radius:10px;border:0;cursor:pointer;color:#fff;background:#2a2f36}
+  button.primary{background:var(--blue)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg label{padding:8px 14px;cursor:pointer;font-size:14px;color:var(--dim)}
+  .seg input{display:none}
+  .seg input:checked+span{color:#fff}
+  .seg label:has(input:checked){background:#1d2733;color:#fff}
+  #status{font-size:13px;color:var(--dim)}
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+  .tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:74px}
+  .tile .k{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim)}
+  .tile .v{font-size:22px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+  .tile .s{font-size:12px;color:var(--dim);margin-top:2px}
+  .bar{height:6px;background:#1d2733;border-radius:3px;margin-top:8px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .08s linear}
+  #talk{display:none;width:100%;padding:22px;font-size:18px;font-weight:700;background:#1d2733;border:2px solid var(--line);user-select:none;-webkit-user-select:none;touch-action:none}
+  #talk.on{background:#1b4d2a;border-color:var(--ok)}
+  #guard{display:none;background:#7a1f1f;padding:12px 14px;border-radius:10px;font-weight:700;margin:10px 0}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0;font-variant-numeric:tabular-nums}
+  th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  th{color:var(--dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  td:first-child,th:first-child{text-align:left}
+  td.txt{text-align:left;white-space:normal;color:var(--dim);max-width:340px}
+  td.big{color:var(--bad);font-weight:700}
+  td.tot{font-weight:700}
+  #log{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;height:230px;overflow:auto;font-size:13px;line-height:1.45;font-family:ui-monospace,Menlo,monospace}
+  #log div{white-space:pre-wrap}
+  .t{color:#4b5866;margin-right:8px}
+  .u{color:#8ccbf4} .b{color:#c8f7c5} .sys{color:#f5a0c0} .m{color:var(--dim)}
+  h4{margin:14px 0 4px;font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+</style>
+</head>
+<body>
+  <h2>Call the Professor — latency harness</h2>
+  <p class="hint">Throwaway diagnostic. Wear headphones. Pick a mode, click Start, talk. Each turn shows where the seconds go: from the moment you stop talking, to Gemini hearing you, to its first audio, to the speaker.</p>
+
+  <div class="row">
+    <span class="seg">
+      <label><input type="radio" name="mode" value="vad" checked><span>Auto turn detection</span></label>
+      <label><input type="radio" name="mode" value="ptt"><span>Hold to talk</span></label>
+    </span>
+    <button id="start" class="primary">Start call</button>
+    <button id="end" disabled>End call</button>
+    <span id="status">idle</span>
+  </div>
+
+  <button id="talk">Hold to talk (or hold Space)</button>
+
+  <div class="tiles">
+    <div class="tile"><div class="k">Mic level</div><div class="v" id="micv">—</div><div class="bar"><i id="micbar"></i></div><div class="s" id="mics">local speech detector</div></div>
+    <div class="tile"><div class="k">Upload backlog</div><div class="v" id="upv">—</div><div class="s" id="ups">browser buffer / server lag</div></div>
+    <div class="tile"><div class="k">Playback queue</div><div class="v" id="pqv">—</div><div class="s">audio scheduled ahead of now</div></div>
+    <div class="tile"><div class="k">Session</div><div class="v" id="sesv">—</div><div class="s" id="sess">turns / tokens</div></div>
+  </div>
+
+  <div id="guard">EMERGENCY DETECTED — guardrail fired: model audio cut, safety message played.</div>
+
+  <h4>Turns</h4>
+  <table>
+    <thead><tr>
+      <th>#</th><th>You stopped → heard</th><th>Heard → first audio</th><th>First audio → speaker</th><th>Total</th><th>Server est.</th><th style="text-align:left">Said / Reply</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <h4>Events</h4>
+  <div id="log"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const S = { ws:null, ctx:null, proc:null, micSrc:null, stream:null, playHead:0, sources:new Set(),
+  mode:'vad', t0:0, cur:null, turns:0, segs:[], loud:false, lastLoud:0, segStart:0, rms:0,
+  up:null, tokens:0, pttOn:false, pttEnd:0, running:false };
+const VAD_THR = 0.02, VAD_HANG_MS = 300;
+
+const now = () => performance.now();
+const rel = t => ((t - S.t0) / 1000).toFixed(3).padStart(7);
+const fmt = ms => (ms == null || isNaN(ms)) ? '?' : (ms / 1000).toFixed(2) + 's';
+function log(m, c) {
+  const d = $("log"), e = document.createElement("div"); if (c) e.className = c;
+  const t = document.createElement("span"); t.className = "t"; t.textContent = S.t0 ? rel(now()) : "";
+  e.appendChild(t); e.appendChild(document.createTextNode(m)); d.appendChild(e); d.scrollTop = d.scrollHeight;
+}
+const status = m => $("status").textContent = m;
+const newTurn = () => ({ n: S.turns + 1, tStop: null, tHeard: null, tAudioRecv: null, tPlay: null, serverMs: null, user: "", bot: "", stopNote: "" });
+
+document.querySelectorAll('input[name=mode]').forEach(r => r.onchange = () => { S.mode = r.value; $("talk").style.display = (S.mode === 'ptt' && S.running) ? 'block' : 'none'; });
+
+$("start").onclick = async () => {
+  S.mode = document.querySelector('input[name=mode]:checked').value;
+  $("start").disabled = true; $("end").disabled = false; $("guard").style.display = "none";
+  $("rows").innerHTML = ""; $("log").innerHTML = ""; S.turns = 0; S.segs = []; S.tokens = 0; S.up = null; S.cur = newTurn();
+  S.t0 = now(); log(`mode=${S.mode}`, "m");
+  try {
+    S.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    S.stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount:1, echoCancellation:true, noiseSuppression:true, autoGainControl:true } });
+  } catch (e) { log("mic error: " + e.message, "sys"); status("mic denied"); $("start").disabled = false; return; }
+  log(`audio context: state=${S.ctx.state} rate=${S.ctx.sampleRate} Hz, chunk=${(4096/S.ctx.sampleRate*1000).toFixed(0)} ms`, "m");
+  S.ctx.onstatechange = () => log(`audio context state -> ${S.ctx.state}`, "sys");
+
+  S.micSrc = S.ctx.createMediaStreamSource(S.stream);
+  S.proc = S.ctx.createScriptProcessor(4096, 1, 1);
+  const mute = S.ctx.createGain(); mute.gain.value = 0;
+  S.micSrc.connect(S.proc); S.proc.connect(mute); mute.connect(S.ctx.destination);
+  const ratio = S.ctx.sampleRate / 16000;
+
+  S.ws = new WebSocket(`ws://${location.host}/ws?mode=${S.mode}`); S.ws.binaryType = "arraybuffer";
+  S.ws.onopen  = () => { status("connecting to Gemini…"); log("socket open; waiting for Gemini session", "sys"); };
+  S.ws.onclose = e => { status(`closed (code ${e.code})`); log(`socket closed code=${e.code} clean=${e.wasClean} reason="${e.reason}"`, "sys"); teardown(); };
+  S.ws.onerror = () => log("socket error", "sys");
+  S.ws.onmessage = ev => {
+    const t = now();
+    if (typeof ev.data !== "string") {
+      const startAt = playPCM(ev.data);
+      const c = S.cur;
+      if (!c.tAudioRecv) {
+        c.tAudioRecv = t;
+        c.tPlay = t + Math.max(0, (startAt - S.ctx.currentTime)) * 1000;
+        log(`first audio of turn ${c.n} arrived; plays in ${((c.tPlay - t)/1000).toFixed(2)}s`, "m");
+        render(c);
+      }
+      return;
+    }
+    const m = JSON.parse(ev.data);
+    switch (m.type) {
+      case "ready": S.running = true; status(`live — ${S.mode === 'ptt' ? 'hold to talk' : 'just talk'}`); log(`Gemini session ready (setup ${m.setup_ms} ms)`, "sys");
+        if (S.mode === 'ptt') $("talk").style.display = 'block'; break;
+      case "user": {
+        const c = S.cur;
+        if (!c.tHeard) {
+          c.tHeard = t;
+          if (S.mode === 'ptt') { c.tStop = S.pttEnd || null; }
+          else {
+            const seg = S.segs.find(s => !s.used);
+            if (seg) { seg.used = true; c.tStop = seg.end; }
+            else if (S.loud) { c.tStop = t; c.stopNote = " (heard while still talking)"; }
+          }
+        }
+        c.user += m.text; log("You: " + m.text, "u"); render(c); break; }
+      case "latency": S.cur.serverMs = m.ms; render(S.cur); break;
+      case "bot": S.cur.bot += m.text; render(S.cur); break;
+      case "interrupted": flush(); log("interrupted (barge-in)", "sys"); break;
+      case "turn_complete": { const c = S.cur; S.turns = m.n; log(`turn ${m.n} complete`, "m"); render(c, true); S.cur = newTurn(); break; }
+      case "up": S.up = m; break;
+      case "usage": S.tokens = m.total; log(`usage: prompt=${m.prompt} response=${m.response} total=${m.total}`, "m"); break;
+      case "guardrail": flush(); $("guard").style.display = "block"; log("GUARDRAIL FIRED", "sys");
+        try { speechSynthesis.speak(new SpeechSynthesisUtterance("This may be an emergency. Please call 999 or NHS 111 now.")); } catch(e){} break;
+      case "sys": log(m.text, "sys"); break;
+      case "error": log("error: " + m.text, "sys"); break;
+    }
+  };
+
+  S.proc.onaudioprocess = e => {
+    const inp = e.inputBuffer.getChannelData(0), t = now();
+    let sq = 0; for (let i = 0; i < inp.length; i++) sq += inp[i] * inp[i];
+    S.rms = Math.sqrt(sq / inp.length);
+    // local speech detector: timestamps the moment YOU stop talking (independent of Gemini)
+    if (S.rms > VAD_THR) { if (!S.loud) { S.loud = true; S.segStart = t; } S.lastLoud = t; }
+    else if (S.loud && t - S.lastLoud > VAD_HANG_MS) {
+      S.loud = false; S.segs.push({ start: S.segStart, end: S.lastLoud, used: false });
+      log(`(you stopped talking after ${((S.lastLoud - S.segStart)/1000).toFixed(1)}s of speech)`, "m");
+    }
+    if (!S.ws || S.ws.readyState !== 1) return;
+    if (S.mode === 'ptt' && !S.pttOn) return;
+    const outLen = Math.floor(inp.length / ratio), pcm = new Int16Array(outLen);
+    for (let i = 0; i < outLen; i++) {
+      const a = Math.floor(i * ratio), b = Math.floor((i + 1) * ratio);
+      let sum = 0, n = 0;
+      for (let j = a; j < b && j < inp.length; j++) { sum += inp[j]; n++; }
+      let s = n ? sum / n : 0; s = Math.max(-1, Math.min(1, s));
+      pcm[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    }
+    S.ws.send(pcm.buffer);
+  };
+};
+
+function playPCM(buf) {
+  const i16 = new Int16Array(buf), f32 = new Float32Array(i16.length);
+  for (let i = 0; i < i16.length; i++) f32[i] = i16[i] / 32768;
+  const ab = S.ctx.createBuffer(1, f32.length, 24000); ab.getChannelData(0).set(f32);
+  const src = S.ctx.createBufferSource(); src.buffer = ab; src.connect(S.ctx.destination);
+  const t = Math.max(S.ctx.currentTime, S.playHead); src.start(t); S.playHead = t + ab.duration;
+  S.sources.add(src); src.onended = () => S.sources.delete(src);
+  return t;
+}
+function flush() { for (const s of S.sources) { try { s.stop(); } catch(e){} } S.sources.clear(); S.playHead = S.ctx ? S.ctx.currentTime : 0; }
+
+// ---- push to talk ----
+function pttStart() { if (!S.running || S.pttOn) return; S.pttOn = true; $("talk").classList.add("on"); S.ws.send(JSON.stringify({ type: "ptt", on: true })); log("(talk: down)", "m"); }
+function pttStop()  { if (!S.pttOn) return; S.pttOn = false; S.pttEnd = now(); $("talk").classList.remove("on"); S.ws.send(JSON.stringify({ type: "ptt", on: false })); log("(talk: up)", "m"); }
+$("talk").onpointerdown = e => { e.preventDefault(); pttStart(); };
+["pointerup","pointerleave","pointercancel"].forEach(ev => $("talk")["on"+ev] = pttStop);
+window.onkeydown = e => { if (e.code === "Space" && S.mode === 'ptt' && S.running) { e.preventDefault(); if (!e.repeat) pttStart(); } };
+window.onkeyup   = e => { if (e.code === "Space" && S.mode === 'ptt') { e.preventDefault(); pttStop(); } };
+
+// ---- turn table ----
+function cell(v, big) { const td = document.createElement("td"); td.textContent = v; if (big) td.className = "big"; return td; }
+function render(c, done) {
+  let tr = document.getElementById("turn" + c.n);
+  if (!tr) { tr = document.createElement("tr"); tr.id = "turn" + c.n; $("rows").appendChild(tr); }
+  const a = (c.tStop != null && c.tHeard != null) ? c.tHeard - c.tStop : null;
+  const b = (c.tHeard != null && c.tAudioRecv != null) ? c.tAudioRecv - c.tHeard : null;
+  const d = (c.tAudioRecv != null && c.tPlay != null) ? c.tPlay - c.tAudioRecv : null;
+  const tot = (c.tStop != null && c.tPlay != null) ? c.tPlay - c.tStop : null;
+  const mx = Math.max(a || 0, b || 0, d || 0);
+  tr.innerHTML = "";
+  tr.appendChild(cell(c.n + (done ? "" : " …")));
+  tr.appendChild(cell(fmt(a) + c.stopNote, a != null && a === mx && a > 1000));
+  tr.appendChild(cell(fmt(b), b != null && b === mx && b > 1000));
+  tr.appendChild(cell(fmt(d), d != null && d === mx && d > 1000));
+  const tc = cell(fmt(tot)); tc.className = "tot"; tr.appendChild(tc);
+  tr.appendChild(cell(c.serverMs != null ? fmt(c.serverMs) : "—"));
+  const tx = document.createElement("td"); tx.className = "txt"; tx.textContent = (c.user ? "“" + c.user.trim() + "”" : "") + (c.bot ? "  →  " + c.bot.trim() : ""); tr.appendChild(tx);
+}
+
+// ---- live meters ----
+(function meters() {
+  if (S.ctx) {
+    const pct = Math.min(100, S.rms * 500); $("micbar").style.width = pct + "%"; $("micbar").style.background = S.loud ? "var(--ok)" : "#3a4652";
+    $("micv").textContent = S.loud ? "talking" : "quiet"; $("mics").textContent = `rms ${S.rms.toFixed(3)} (thr ${VAD_THR})`;
+    const q = Math.max(0, S.playHead - S.ctx.currentTime); $("pqv").textContent = q.toFixed(2) + "s";
+    if (S.ws) {
+      const kb = (S.ws.bufferedAmount / 1024).toFixed(0);
+      $("upv").textContent = S.up ? `${S.up.lag_s.toFixed(1)}s lag` : `${kb} KB`;
+      $("upv").style.color = (S.ws.bufferedAmount > 65536 || (S.up && S.up.lag_s > 1)) ? "var(--bad)" : "";
+      $("ups").textContent = S.up ? `browser buf ${kb} KB · send avg ${S.up.send_avg_ms} / max ${S.up.send_max_ms} ms` : "browser buffer / server lag";
+    }
+    $("sesv").textContent = `${S.turns} / ${S.tokens}`;
+  }
+  requestAnimationFrame(meters);
+})();
+
+function teardown() {
+  S.running = false; S.pttOn = false; $("talk").style.display = "none";
+  try { S.proc && S.proc.disconnect(); } catch(e){}
+  try { S.micSrc && S.micSrc.disconnect(); } catch(e){}
+  try { S.stream && S.stream.getTracks().forEach(t => t.stop()); } catch(e){}
+  try { S.ctx && S.ctx.state !== "closed" && S.ctx.close(); } catch(e){}
+  $("start").disabled = false; $("end").disabled = true;
+}
+$("end").onclick = () => { log("you clicked End", "sys"); try { S.ws && S.ws.close(1000, "user ended"); } catch(e){} teardown(); status("idle"); };
+</script>
+</body>
+</html>

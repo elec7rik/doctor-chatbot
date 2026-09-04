@@ -1,0 +1,24 @@
+# Controls what gets uploaded to Cloud Build. Its presence stops gcloud from
+# falling back to .gitignore, so we keep explicit control here.
+
+# Secrets / local-only config — must NEVER reach the build or image.
+.env
+.git/
+.gitignore
+.DS_Store
+
+# Virtualenvs (host-specific, large)
+.venv/
+backend/.venv/
+
+# Python caches
+__pycache__/
+**/__pycache__/
+*.pyc
+
+# Not needed to run the service
+eval/
+content-plan.html
+backend/README.md
+backend/http_test.py
+backend/smoke_test.py
