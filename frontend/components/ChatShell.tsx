@@ -14,16 +14,8 @@ import { LinkCard } from "./LinkCard";
 import { Composer } from "./Composer";
 import { VoiceStage } from "./VoiceStage";
 import { CallReceipt } from "./CallReceipt";
+import { guideTitle } from "@/content/guides/catalog";
 
-const GUIDE_TITLES: Record<string, string> = {
-  "better-sleep": "How to Sleep Better, Naturally",
-  "why-am-i-always-tired": "Why Am I Always Tired?",
-  "what-supplements-to-take": "What Supplements Should You Actually Take?",
-  skincare: "Skincare That Actually Works",
-  "hair-loss": "Hair Loss and Hair Growth",
-  testosterone: "Low Testosterone: Signs & What Helps",
-  menopause: "Menopause & Perimenopause",
-};
 
 export function ChatShell() {
   const readAloud = useReadAloud();
@@ -67,10 +59,10 @@ export function ChatShell() {
             )}
             {messages.flatMap((m, i) =>
               m.guideSlugs
-                .filter((s) => GUIDE_TITLES[s])
+                .filter((s) => guideTitle(s))
                 .map((s) => (
                   <div className="thread-cards" key={`${i}-${s}`}>
-                    <LinkCard href={`/guides/${s}`} title={GUIDE_TITLES[s]!} subtitle="My Longevity Hub guide" />
+                    <LinkCard href={`/guides/${s}`} title={guideTitle(s)!} subtitle="My Longevity Hub guide" />
                   </div>
                 )),
             )}
