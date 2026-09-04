@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import type { PointerEvent as RPointerEvent } from "react";
 
 const mic = vi.hoisted(() => ({
   level: 0,
@@ -79,5 +80,33 @@ describe("useVoiceCall", () => {
     mic.capturing = false;
     act(() => handlers().onAudio?.(new Int16Array(2).buffer));
     expect(mic.play24k).toHaveBeenCalledTimes(1);
+  });
+  it("keeps the old answer's leftover audio muted after a barge-in until the turn boundary", async () => {
+    const raf = vi.spyOn(globalThis, "requestAnimationFrame").mockReturnValue(0 as unknown as number);
+    const caf = vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+    let t = 0;
+    const nowSpy = vi.spyOn(performance, "now").mockImplementation(() => t);
+    const ev = () => ({ preventDefault() {}, currentTarget: { setPointerCapture() {} }, pointerId: 1 }) as unknown as RPointerEvent<HTMLButtonElement>;
+
+    const { result } = renderHook(() => useVoiceCall({ threadLen: 0 }));
+    await act(async () => { await result.current.startCall(); });
+    act(() => handlers().onMessage?.({ type: "ready" }));            // idle
+    // first turn: press-hold-release -> thinking (no barge, bargedRef stays false)
+    t = 0;    act(() => result.current.onPointerDown(ev()));         // idle -> listening
+    t = 500;  act(() => result.current.onPointerUp(ev()));           // hold -> thinking
+    // barge in on the in-flight answer: press-hold-release
+    t = 600;  act(() => result.current.onPointerDown(ev()));         // thinking -> listening (bargedRef=true)
+    t = 1100; act(() => result.current.onPointerUp(ev()));           // hold -> thinking (capturing=false)
+    mic.capturing = false;
+    mic.play24k.mockClear();
+    // leftover answer-1 frames arrive AFTER release — must still be muted
+    act(() => handlers().onAudio?.(new Int16Array(2).buffer));
+    expect(mic.play24k).not.toHaveBeenCalled();
+    // server marks the boundary — the new answer is allowed through
+    act(() => handlers().onMessage?.({ type: "interrupted" }));
+    act(() => handlers().onAudio?.(new Int16Array(2).buffer));
+    expect(mic.play24k).toHaveBeenCalledTimes(1);
+
+    nowSpy.mockRestore(); raf.mockRestore(); caf.mockRestore();
   });
 });

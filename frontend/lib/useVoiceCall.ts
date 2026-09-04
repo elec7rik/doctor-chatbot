@@ -26,6 +26,9 @@ export function useVoiceCall(opts: { threadLen: number; onBeforeStart?: () => vo
   const wakeRef = useRef<WakeLockLike | null>(null);
   const pressT0 = useRef(0);
   const consumed = useRef(false);
+  // Set when the caller barges into an in-flight answer; suppresses the model's
+  // leftover audio until the server marks the turn boundary (interrupted / turn).
+  const bargedRef = useRef(false);
   const meterRAF = useRef(0);
   const startedAt = useRef(0);
   const timerId = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -93,9 +96,10 @@ export function useVoiceCall(opts: { threadLen: number; onBeforeStart?: () => vo
       onOpen: () => { /* status stays 'connecting' until 'ready' */ },
       onClose: () => { if (!closingRef.current) dispatch({ type: "SOCKET_CLOSED" }); },
       onAudio: (buf) => {
-        // Barge-in: while the caller is holding to talk, drop the model's audio instead of
-        // playing it over them (the server keeps streaming the old answer until it interrupts).
-        if (sharedMic.capturing) return;
+        // Barge-in: drop the model's audio while the caller holds to talk AND until the
+        // server marks the turn boundary — otherwise the old answer's leftover frames
+        // (still streaming from the server) resume playing the moment they release.
+        if (sharedMic.capturing || bargedRef.current) return;
         dispatch({ type: "AUDIO" });
         sharedMic.play24k(buf);
       },
@@ -108,8 +112,8 @@ export function useVoiceCall(opts: { threadLen: number; onBeforeStart?: () => vo
             setCards(cardsRef.current);
             break;
           }
-          case "interrupted": sharedMic.flushOutput(); break;
-          case "turn": dispatch({ type: "TURN" }); break;
+          case "interrupted": bargedRef.current = false; sharedMic.flushOutput(); break;
+          case "turn": bargedRef.current = false; dispatch({ type: "TURN" }); break;
           case "guardrail":
             sharedMic.flushOutput();
             setNote(m.text);
@@ -136,6 +140,7 @@ export function useVoiceCall(opts: { threadLen: number; onBeforeStart?: () => vo
     if (active) return;
     opts.onBeforeStart?.();
     cardsRef.current = [];
+    bargedRef.current = false;
     setCards([]); setNote(""); setElapsed(0);
     dispatch({ type: "RESET" });
     setActive(true);
@@ -180,6 +185,7 @@ export function useVoiceCall(opts: { threadLen: number; onBeforeStart?: () => vo
     if (st.phase === "listening" && st.latched) { endTurnIO(); dispatch({ type: "PRESS" }); consumed.current = true; return; }
     if (st.phase === "speaking") sharedMic.flushOutput();
     if (!(st.phase === "idle" || st.phase === "thinking" || st.phase === "guardrail" || st.phase === "speaking")) { consumed.current = true; return; }
+    if (st.phase === "speaking" || st.phase === "thinking") bargedRef.current = true;
     dispatch({ type: "PRESS" });
     beginTurnIO();
     pressT0.current = performance.now();
@@ -209,6 +215,7 @@ export function useVoiceCall(opts: { threadLen: number; onBeforeStart?: () => vo
       if (st.phase !== "idle" && st.phase !== "thinking" && st.phase !== "speaking" && st.phase !== "guardrail") return;
       e.preventDefault();
       if (st.phase === "speaking") sharedMic.flushOutput();
+      if (st.phase === "speaking" || st.phase === "thinking") bargedRef.current = true;
       dispatch({ type: "PRESS" });
       beginTurnIO();
     };
