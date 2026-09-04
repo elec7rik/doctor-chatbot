@@ -56,8 +56,10 @@ export function VoiceStage({
         <p className="vs-status" aria-live="polite">{view.status}</p>
         <div className="vs-cards">
           {note && <div className="voice-note">{note}</div>}
-          {cards.map((c, i) => (
-            <LinkCard key={i} href={c.url} title={c.title} subtitle={c.subtitle} />
+          {/* Only the latest guide card stays on the stage so it matches the current turn;
+              the full set is still kept for the post-call receipt. */}
+          {cards.slice(-1).map((c) => (
+            <LinkCard key={c.url} href={c.url} title={c.title} subtitle={c.subtitle} />
           ))}
         </div>
       </div>

@@ -29,4 +29,18 @@ describe("VoiceStage", () => {
     expect(screen.getByText("Please call 999 now.")).toBeInTheDocument();
     expect(screen.getByText("Peptides 101")).toBeInTheDocument();
   });
+  it("shows only the most recent guide card (older ones drop off the stage)", () => {
+    render(
+      <VoiceStage
+        {...base}
+        cards={[
+          { url: "https://a.co", title: "Hair Loss and Hair Growth", subtitle: "guide" },
+          { url: "https://b.co", title: "How to Sleep Better", subtitle: "guide" },
+        ]}
+        view={view({ phase: "idle", latched: false, note: "", errorText: "" }, false)}
+      />,
+    );
+    expect(screen.getByText("How to Sleep Better")).toBeInTheDocument();
+    expect(screen.queryByText("Hair Loss and Hair Growth")).not.toBeInTheDocument();
+  });
 });
