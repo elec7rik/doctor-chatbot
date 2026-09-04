@@ -21,7 +21,7 @@ vi.mock("./liveSocket", () => ({
 }));
 
 import { useVoiceCall } from "./useVoiceCall";
-type Handlers = { onOpen?: () => void; onMessage?: (m: unknown) => void; onClose?: () => void };
+type Handlers = { onOpen?: () => void; onMessage?: (m: unknown) => void; onClose?: () => void; onAudio?: (b: ArrayBuffer) => void };
 const handlers = () => socket.handlers as Handlers;
 
 beforeEach(() => {
@@ -65,5 +65,19 @@ describe("useVoiceCall", () => {
     expect(result.current.active).toBe(true);
     expect(result.current.view.status).toBe("mic err");
     expect(result.current.view.buttonHidden).toBe(true);
+  });
+  it("drops model audio while the user is talking (barge-in), plays it otherwise", async () => {
+    const { result } = renderHook(() => useVoiceCall({ threadLen: 0 }));
+    await act(async () => { await result.current.startCall(); });
+    act(() => handlers().onMessage?.({ type: "ready" }));
+    mic.play24k.mockClear();
+    // user is holding to talk: incoming model audio must NOT play over them
+    mic.capturing = true;
+    act(() => handlers().onAudio?.(new Int16Array(2).buffer));
+    expect(mic.play24k).not.toHaveBeenCalled();
+    // user released: model audio for the answer plays again
+    mic.capturing = false;
+    act(() => handlers().onAudio?.(new Int16Array(2).buffer));
+    expect(mic.play24k).toHaveBeenCalledTimes(1);
   });
 });

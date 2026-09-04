@@ -92,7 +92,13 @@ export function useVoiceCall(opts: { threadLen: number; onBeforeStart?: () => vo
     socket.current = createLiveSocket(liveUrl(process.env.NEXT_PUBLIC_LIVE_WS_URL, window.location), {
       onOpen: () => { /* status stays 'connecting' until 'ready' */ },
       onClose: () => { if (!closingRef.current) dispatch({ type: "SOCKET_CLOSED" }); },
-      onAudio: (buf) => { dispatch({ type: "AUDIO" }); sharedMic.play24k(buf); },
+      onAudio: (buf) => {
+        // Barge-in: while the caller is holding to talk, drop the model's audio instead of
+        // playing it over them (the server keeps streaming the old answer until it interrupts).
+        if (sharedMic.capturing) return;
+        dispatch({ type: "AUDIO" });
+        sharedMic.play24k(buf);
+      },
       onMessage: (m) => {
         switch (m.type) {
           case "ready": dispatch({ type: "READY" }); break;
