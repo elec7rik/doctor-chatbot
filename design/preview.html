@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Longevity Hub — Design System Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   My Longevity Hub — "The Iris" design system, mobile-first preview.
+   Every value here is a token from DESIGN_SYSTEM.md. Named to match.
+   ========================================================================== */
+:root{
+  /* iris ramp (the one accent) */
+  --iris-50:#F1F0FE; --iris-100:#E5E2FC; --iris-200:#D0CAF8; --iris-300:#B3A9F5;
+  --iris-400:#8A5CF0; --iris-500:#6D5DE8; --iris-600:#5B4BD6; --iris-700:#4B3AC9; --iris-800:#38299B;
+  /* neutrals — light */
+  --bg:#F6F7FB; --surface:#FFFFFF; --surface-2:#EEEFF4; --user:#F1F0FE;
+  --ink:#1E2233; --ink-2:#454A63; --ink-3:#616679; --ink-4:#8A8FA3; --line:#E7E8F0;
+  /* semantic */
+  --accent:var(--iris-600); --link:var(--iris-700); --focus:var(--iris-500);
+  --danger:#E5484D; --danger-ink:#BC3B36;
+  /* gradients (frozen recipes) */
+  --grad-orb-ring:conic-gradient(from 210deg,#B3A9F5,#8A5CF0,#6D5DE8,#B3A9F5,#8A5CF0);
+  --grad-orb-core:radial-gradient(circle at 34% 30%,#FBFAFF 0%,#C9BFFF 24%,#8A5CF0 56%,#5B4BD6 82%,#38299B 100%);
+  --grad-orb-glow:radial-gradient(circle,rgba(138,92,240,.45),transparent 62%);
+  --grad-greeting:linear-gradient(96deg,#6D5DE8,#8A5CF0 55%,#6D5DE8);
+  /* radius */
+  --r-xs:6px; --r-sm:10px; --r-md:14px; --r-lg:20px; --r-xl:28px; --r-2xl:32px; --r-full:9999px;
+  /* elevation — indigo-tinted */
+  --sh-sm:0 1px 2px rgba(30,34,60,.04),0 6px 16px -10px rgba(70,60,150,.18);
+  --sh-md:0 2px 4px rgba(30,34,60,.05),0 14px 30px -14px rgba(70,60,150,.24);
+  --sh-lg:0 10px 44px -14px rgba(80,70,160,.30);
+  --sh-orb:0 24px 70px -16px rgba(110,94,230,.50);
+  /* type + motion */
+  --font:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --dur-fast:120ms; --dur-base:180ms; --ease:cubic-bezier(.2,0,0,1);
+}
+:root[data-theme="dark"]{
+  --bg:#121320; --surface:#1B1D2B; --surface-2:#23263A; --user:#262552;
+  --ink:#E9E9F2; --ink-2:#ADB0C6; --ink-3:#838799; --ink-4:#5A5E74; --line:#2C2F45;
+  --accent:var(--iris-500); --link:var(--iris-300); --focus:var(--iris-300);
+  --danger:#F26A6E; --danger-ink:#F49B9E;
+  --sh-sm:0 2px 8px rgba(0,0,0,.40); --sh-md:0 8px 24px rgba(0,0,0,.50); --sh-lg:0 16px 48px rgba(0,0,0,.60);
+  --sh-orb:0 24px 70px -16px rgba(110,94,230,.42);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121320; --surface:#1B1D2B; --surface-2:#23263A; --user:#262552;
+  --ink:#E9E9F2; --ink-2:#ADB0C6; --ink-3:#838799; --ink-4:#5A5E74; --line:#2C2F45;
+  --accent:var(--iris-500); --link:var(--iris-300); --focus:var(--iris-300);
+  --danger:#F26A6E; --danger-ink:#F49B9E;
+  --sh-sm:0 2px 8px rgba(0,0,0,.40); --sh-md:0 8px 24px rgba(0,0,0,.50); --sh-lg:0 16px 48px rgba(0,0,0,.60);
+  --sh-orb:0 24px 70px -16px rgba(110,94,230,.42);
+}}
+
+*{box-sizing:border-box}
+body{margin:0; font-family:var(--font); background:
+  radial-gradient(120% 60% at 10% -10%, rgba(138,92,240,.10), transparent 55%),
+  radial-gradient(120% 60% at 100% 0%, rgba(109,93,232,.08), transparent 50%),
+  var(--bg);
+  color:var(--ink); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  min-height:100vh; padding:28px 16px 56px}
+:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+
+/* ---------- preview scaffold ---------- */
+.page-head{max-width:840px; margin:0 auto 26px; display:flex; align-items:center; gap:14px; flex-wrap:wrap}
+.page-head .mk{width:26px; color:var(--accent)}
+.page-head .mk svg{display:block; width:100%}
+.page-head h1{font-size:16px; font-weight:800; letter-spacing:-.01em; margin:0}
+.page-head p{margin:0; font-size:13px; color:var(--ink-3)}
+.themebtn{margin-left:auto; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; color:var(--ink-2);
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r-full); padding:8px 14px;
+  box-shadow:var(--sh-sm); transition:color var(--dur-base), border-color var(--dur-base), scale var(--dur-fast)}
+.themebtn:hover{color:var(--accent); border-color:var(--accent)}
+.themebtn:active{scale:.96}
+
+.stage{max-width:840px; margin:0 auto; display:flex; flex-wrap:wrap; gap:34px 30px; justify-content:center; align-items:flex-start}
+.framewrap{width:100%; max-width:390px}
+.caption{text-align:center; margin:0 0 12px; font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3)}
+
+/* phone */
+.phone{position:relative; width:100%; height:720px; background:var(--bg); border-radius:44px;
+  border:1px solid var(--line); box-shadow:var(--sh-lg),0 0 0 10px rgba(30,34,60,.04);
+  overflow:hidden; display:flex; flex-direction:column}
+:root[data-theme="dark"] .phone{box-shadow:var(--sh-lg),0 0 0 10px rgba(255,255,255,.03)}
+.statusbar{flex:none; display:flex; align-items:center; justify-content:space-between; padding:12px 22px 6px;
+  font-size:12.5px; font-weight:700; letter-spacing:.02em; color:var(--ink-2)}
+.statusbar .dots{display:flex; gap:5px; align-items:center}
+.statusbar .dots span{width:6px; height:6px; border-radius:50%; background:var(--ink-3)}
+.statusbar .dots b{width:22px; height:11px; border:1.4px solid var(--ink-3); border-radius:3px; display:inline-block; position:relative}
+.statusbar .dots b::after{content:""; position:absolute; inset:2px; right:6px; background:var(--ink-2); border-radius:1px}
+
+/* ---------- app header ---------- */
+.hd{flex:none; position:relative; z-index:20; padding:6px 16px 12px;
+  background:color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter:blur(12px); border-bottom:1px solid var(--line)}
+.hd-row{display:flex; align-items:center; gap:10px}
+.icon-btn{flex:none; width:38px; height:38px; border-radius:var(--r-md); display:grid; place-items:center; cursor:pointer;
+  background:var(--surface); border:1px solid var(--line); color:var(--ink-2); box-shadow:var(--sh-sm);
+  transition:color var(--dur-base), border-color var(--dur-base), scale var(--dur-fast)}
+.icon-btn:hover{color:var(--accent); border-color:var(--accent)}
+.icon-btn:active{scale:.94}
+.icon-btn svg{width:19px; height:19px}
+.mark{flex:none; width:26px; color:var(--accent); display:grid; place-items:center}
+.mark svg{display:block; width:100%}
+.wm{font-weight:800; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink); white-space:nowrap}
+.pro-pill{font-size:9.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--iris-700);
+  background:var(--iris-50); border:1px solid var(--iris-100); border-radius:var(--r-full); padding:3px 9px; white-space:nowrap}
+:root[data-theme="dark"] .pro-pill{color:var(--iris-300); background:rgba(109,93,232,.16); border-color:rgba(109,93,232,.3)}
+.hd-actions{margin-left:auto; display:flex; gap:7px}
+.toggle{flex:none; display:inline-flex; align-items:center; gap:6px; font:inherit; font-size:12px; font-weight:600; cursor:pointer;
+  color:var(--ink-2); background:var(--surface); border:1px solid var(--line); border-radius:var(--r-full); padding:8px 10px;
+  box-shadow:var(--sh-sm); transition:color var(--dur-base), border-color var(--dur-base), scale var(--dur-fast)}
+.toggle:hover{color:var(--accent); border-color:var(--accent)}
+.toggle:active{scale:.95}
+.toggle svg{width:16px; height:16px}
+.toggle.on{background:var(--accent); border-color:var(--accent); color:#fff; box-shadow:0 6px 16px -8px rgba(91,75,214,.7)}
+
+/* disclaimer strip */
+.disc-strip{margin-top:11px}
+.disc-rule{width:26px; height:2px; border-radius:2px; background:var(--accent); margin:0 0 7px}
+.disc-strip p{margin:0; font-size:11px; line-height:1.5; color:var(--ink-3); text-wrap:pretty}
+.disc-strip b{color:var(--ink-2); font-weight:600}
+
+/* ---------- scroll region ---------- */
+.scroll{flex:1; overflow-y:auto; padding:20px 16px}
+.scroll::-webkit-scrollbar{width:0}
+
+/* ---------- empty state ---------- */
+.welcome{display:flex; flex-direction:column; align-items:center; text-align:center; padding-top:20px}
+.orb{position:relative; width:118px; aspect-ratio:1; margin-bottom:26px; filter:drop-shadow(var(--sh-orb))}
+.orb span{position:absolute; inset:0; border-radius:50%}
+.orb .glow{inset:-26%; background:var(--grad-orb-glow); filter:blur(20px); animation:breathe 3.8s ease-in-out infinite}
+.orb .ring{background:var(--grad-orb-ring); filter:blur(6px) saturate(1.15); opacity:.92; animation:spin 9s linear infinite}
+.orb .core{inset:14%; background:var(--grad-orb-core);
+  box-shadow:0 10px 40px rgba(91,75,214,.45), inset -6px -8px 22px rgba(46,25,120,.5), inset 8px 8px 26px rgba(255,255,255,.6);
+  animation:breathe 3.8s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes breathe{0%,100%{transform:scale(.95); opacity:.92}50%{transform:scale(1.05); opacity:1}}
+.greet{font-size:26px; line-height:1.14; font-weight:800; letter-spacing:-.02em; margin:0; text-wrap:balance; max-width:15ch}
+.greet .kw{background:var(--grad-greeting); -webkit-background-clip:text; background-clip:text; color:transparent}
+.subline{margin:10px 0 0; font-size:14.5px; line-height:1.5; color:var(--ink-2); max-width:26ch; text-wrap:pretty}
+.chips{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:22px; max-width:340px}
+.chip{font:inherit; font-size:13.5px; cursor:pointer; color:var(--ink); background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-lg); padding:10px 14px; box-shadow:var(--sh-sm);
+  transition:color var(--dur-base), border-color var(--dur-base), scale var(--dur-fast)}
+.chip:hover{color:var(--iris-700); border-color:var(--accent)}
+:root[data-theme="dark"] .chip:hover{color:var(--iris-300)}
+.chip:active{scale:.96}
+
+/* ---------- conversation ---------- */
+.thread{display:flex; flex-direction:column; gap:16px}
+.msg{display:flex; max-width:100%}
+.b{padding:12px 16px; border-radius:var(--r-lg); font-size:15.5px; line-height:1.6; overflow-wrap:anywhere}
+.msg.bot{max-width:92%}
+.msg.bot .b{background:var(--surface); box-shadow:var(--sh-sm); border-top-left-radius:var(--r-xs); color:var(--ink)}
+:root[data-theme="dark"] .msg.bot .b{border:1px solid var(--line)}
+.msg.user{justify-content:flex-end; margin-left:auto}
+.msg.user .b{background:var(--user); border-top-right-radius:var(--r-xs); max-width:82%; color:var(--ink)}
+.b :first-child{margin-top:0} .b :last-child{margin-bottom:0}
+.b p{margin:.5em 0; text-wrap:pretty}
+.b h3{font-size:17px; font-weight:700; letter-spacing:-.01em; margin:.7em 0 .3em}
+.b strong{font-weight:650}
+.b ul{margin:.5em 0; padding-left:1.25em}
+.b li{margin:.28em 0}
+.b li::marker{color:var(--iris-500)}
+.b a{color:var(--link); font-weight:600; text-decoration:underline; text-underline-offset:2px; text-decoration-thickness:1px}
+.b code{background:var(--iris-50); color:var(--iris-700); padding:1px 5px; border-radius:var(--r-xs); font-size:.9em}
+:root[data-theme="dark"] .b code{background:rgba(109,93,232,.16); color:var(--iris-300)}
+.tier{display:inline-block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+  padding:2px 8px; border-radius:var(--r-xs); vertical-align:middle}
+.tier.strong{background:var(--iris-600); color:#fff}
+.tier.promising{background:var(--iris-50); color:var(--iris-700)}
+:root[data-theme="dark"] .tier.promising{background:rgba(109,93,232,.18); color:var(--iris-300)}
+.tier.animal{background:var(--surface-2); color:var(--ink-2)}
+
+/* link card */
+.linkcard{display:flex; align-items:center; gap:12px; text-decoration:none; margin-top:4px;
+  padding:12px 14px; border-radius:var(--r-lg); background:var(--surface); border:1px solid var(--line);
+  box-shadow:var(--sh-sm); transition:border-color var(--dur-base), box-shadow var(--dur-base), scale var(--dur-fast)}
+.linkcard:hover{border-color:var(--accent); box-shadow:var(--sh-md)}
+.linkcard:active{scale:.99}
+.lc-ic{flex:none; width:40px; height:40px; border-radius:var(--r-md); display:grid; place-items:center;
+  background:var(--iris-50); color:var(--iris-700)}
+:root[data-theme="dark"] .lc-ic{background:rgba(109,93,232,.16); color:var(--iris-300)}
+.lc-ic svg{width:20px; height:20px}
+.lc-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+.lc-title{font-weight:700; color:var(--ink); font-size:15px; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.lc-sub{font-size:12.5px; color:var(--ink-3)}
+.lc-go{flex:none; color:var(--ink-3)} .lc-go svg{width:18px; height:18px; display:block}
+
+/* typing */
+.typing{display:inline-flex; gap:5px; align-items:center; padding:4px 2px}
+.typing i{width:7px; height:7px; border-radius:50%; background:var(--ink-3); animation:bob 1.1s infinite ease-in-out}
+.typing i:nth-child(2){animation-delay:.15s} .typing i:nth-child(3){animation-delay:.3s}
+@keyframes bob{0%,80%,100%{transform:translateY(0); opacity:.4}40%{transform:translateY(-4px); opacity:1}}
+
+/* ---------- composer ---------- */
+.composer{flex:none; padding:12px 16px calc(16px + env(safe-area-inset-bottom)); border-top:1px solid var(--line);
+  background:var(--bg)}
+.box{display:flex; gap:8px; align-items:flex-end; background:var(--surface); border:1.5px solid var(--line);
+  border-radius:var(--r-xl); padding:8px 8px 8px 16px; box-shadow:var(--sh-md); transition:border-color var(--dur-base)}
+.box:focus-within{border-color:var(--focus)}
+.box .field{flex:1; border:0; background:transparent; color:var(--ink); font:inherit; font-size:16px; resize:none;
+  padding:9px 0; outline:none; max-height:120px}
+.box .field::placeholder{color:var(--ink-4)}
+.pill-btn{flex:none; width:40px; height:40px; border-radius:var(--r-full); cursor:pointer; display:grid; place-items:center;
+  transition:color var(--dur-base), border-color var(--dur-base), background var(--dur-base), scale var(--dur-fast)}
+.pill-btn svg{width:19px; height:19px}
+.mic{background:var(--surface); border:1px solid var(--line); color:var(--ink-2)}
+.mic:hover{color:var(--accent); border-color:var(--accent)}
+.mic:active{scale:.94}
+.send{border:0; color:#fff; background:var(--accent);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 6px 16px -8px rgba(91,75,214,.7)}
+.send:active{scale:.94}
+.send:disabled{opacity:.4; cursor:not-allowed; box-shadow:none}
+.foot{text-align:center; font-size:11px; color:var(--ink-3); margin:10px 4px 0; text-wrap:pretty}
+
+/* hold-to-talk (shown in the second frame footer area is composer; we show it as a variant note) */
+
+@media (prefers-reduced-motion:reduce){
+  .orb .glow,.orb .ring,.orb .core,.typing i{animation:none!important}
+}
+</style>
+</head>
+<body>
+<div class="page-head">
+  <span class="mk" aria-hidden="true"><svg viewBox="0 0 48 30"><polygon points="3,24 11,24 25,6 17,6" fill="currentColor"/><polygon points="13,24 21,24 35,6 27,6" fill="currentColor"/><polygon points="23,24 31,24 45,6 37,6" fill="currentColor"/></svg></span>
+  <div>
+    <h1>My Longevity Hub — "The Iris" design system</h1>
+    <p>Mobile-first preview · empty state, conversation &amp; composer at 390px</p>
+  </div>
+  <button class="themebtn" id="themeBtn" type="button">Toggle dark</button>
+</div>
+
+<div class="stage">
+  <!-- ============================ EMPTY STATE ============================ -->
+  <div class="framewrap">
+    <div class="caption">Empty state</div>
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span class="dots"><span></span><span></span><span></span><b></b></span></div>
+
+      <header class="hd">
+        <div class="hd-row">
+          <button class="icon-btn" aria-label="Menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+          <span class="mark" aria-hidden="true"><svg viewBox="0 0 48 30"><polygon points="3,24 11,24 25,6 17,6" fill="currentColor"/><polygon points="13,24 21,24 35,6 27,6" fill="currentColor"/><polygon points="23,24 31,24 45,6 37,6" fill="currentColor"/></svg></span>
+          <span class="wm">Longevity Hub</span>
+          <div class="hd-actions">
+            <button class="toggle" aria-label="Read aloud">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
+            </button>
+            <button class="toggle" aria-label="Talk to the professor">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h2"/><path d="M7 8v8"/><path d="M11 5v14"/><path d="M15 8v8"/><path d="M19 12h2"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="disc-strip">
+          <div class="disc-rule"></div>
+          <p><b>General information only</b> — not medical advice. For anything urgent, call <b>999</b> or NHS <b>111</b>.</p>
+        </div>
+      </header>
+
+      <div class="scroll">
+        <div class="welcome">
+          <div class="orb" aria-hidden="true"><span class="glow"></span><span class="ring"></span><span class="core"></span></div>
+          <h2 class="greet">Straight answers on <span class="kw">living longer</span>, better.</h2>
+          <p class="subline">Sleep, supplements, peptides, recovery, energy — the honest version, no hype.</p>
+          <div class="chips">
+            <button class="chip">How do I sleep better?</button>
+            <button class="chip">Does NMN actually work?</button>
+            <button class="chip">What should I take daily?</button>
+            <button class="chip">Recover from injury faster?</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="composer">
+        <div class="box">
+          <textarea class="field" rows="1" placeholder="Ask the professor…"></textarea>
+          <button class="pill-btn mic" aria-label="Speak your question">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21"/></svg>
+          </button>
+          <button class="pill-btn send" aria-label="Send" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="6 11 12 5 18 11"/></svg>
+          </button>
+        </div>
+        <p class="foot">Answers are AI-generated. The professor is an original character, not a real doctor.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ CONVERSATION ============================ -->
+  <div class="framewrap">
+    <div class="caption">In conversation</div>
+    <div class="phone">
+      <div class="statusbar"><span>9:42</span><span class="dots"><span></span><span></span><span></span><b></b></span></div>
+
+      <header class="hd">
+        <div class="hd-row">
+          <button class="icon-btn" aria-label="Menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+          <span class="mark" aria-hidden="true"><svg viewBox="0 0 48 30"><polygon points="3,24 11,24 25,6 17,6" fill="currentColor"/><polygon points="13,24 21,24 35,6 27,6" fill="currentColor"/><polygon points="23,24 31,24 45,6 37,6" fill="currentColor"/></svg></span>
+          <span class="pro-pill">Nutty Professor</span>
+          <div class="hd-actions">
+            <button class="toggle on" aria-label="Read aloud (on)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="disc-strip">
+          <div class="disc-rule"></div>
+          <p><b>General information only</b> — not medical advice. For anything urgent, call <b>999</b> or NHS <b>111</b>.</p>
+        </div>
+      </header>
+
+      <div class="scroll">
+        <div class="thread">
+          <div class="msg user"><div class="b">Does magnesium actually help with sleep, or is it hype?</div></div>
+
+          <div class="msg bot"><div class="b">
+            <p>Short version: it can help, but it's a nudge, not a knockout.</p>
+            <h3>Where the evidence sits</h3>
+            <ul>
+              <li><strong>Magnesium</strong> <span class="tier promising">Promising</span> — supports the "calm down" pathways, strongest if you're low to begin with (common).</li>
+              <li><strong>Glycine &amp; L-theanine</strong> <span class="tier promising">Promising</span> — small studies, gentle effect.</li>
+            </ul>
+            <p>Try a well-tolerated form like <code>magnesium glycinate</code> — but fix the basics first: steady wake time, morning light, caffeine curfew.</p>
+          </div></div>
+
+          <div class="msg user"><div class="b">Where would I get a decent one?</div></div>
+
+          <div class="msg bot"><div class="b">
+            <p>For everyday essentials like magnesium, this is a sensible place to look. Pair it with the sleep habits above.</p>
+            <a class="linkcard" href="#" onclick="return false">
+              <span class="lc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1 1"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1-1"/></svg></span>
+              <span class="lc-body"><span class="lc-title">imnatura — Magnesium</span><span class="lc-sub">Food supplement · Tap to open</span></span>
+              <span class="lc-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
+            </a>
+          </div></div>
+
+          <div class="msg bot"><div class="b"><div class="typing" aria-label="The professor is typing"><i></i><i></i><i></i></div></div></div>
+        </div>
+      </div>
+
+      <div class="composer">
+        <div class="box">
+          <textarea class="field" rows="1" placeholder="Ask the professor…">What about vitamin D?</textarea>
+          <button class="pill-btn mic" aria-label="Speak your question">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21"/></svg>
+          </button>
+          <button class="pill-btn send" aria-label="Send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="6 11 12 5 18 11"/></svg>
+          </button>
+        </div>
+        <p class="foot">Answers are AI-generated. The professor is an original character, not a real doctor.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Theme toggle — cycles light/dark, demonstrating both palettes from one token set.
+  var root = document.documentElement, btn = document.getElementById("themeBtn");
+  function darkNow(){ var t = root.getAttribute("data-theme");
+    if (t) return t === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches; }
+  btn.addEventListener("click", function(){
+    var next = darkNow() ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    btn.textContent = next === "dark" ? "Toggle light" : "Toggle dark";
+  });
+</script>
+</body>
+</html>
