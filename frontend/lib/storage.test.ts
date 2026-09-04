@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { loadHistory, saveHistory, loadSession, saveSession, clearChat } from "./storage";
+import { loadHistory, saveHistory, loadSession, saveSession, clearChat, loadReadAloud, saveReadAloud } from "./storage";
 
 beforeEach(() => localStorage.clear());
 
@@ -23,5 +23,15 @@ describe("storage", () => {
     clearChat();
     expect(loadSession()).toBeNull();
     expect(loadHistory()).toEqual([]);
+  });
+});
+
+describe("read-aloud pref", () => {
+  it("defaults off and round-trips", () => {
+    expect(loadReadAloud()).toBe(false);
+    saveReadAloud(true);
+    expect(loadReadAloud()).toBe(true);
+    saveReadAloud(false);
+    expect(loadReadAloud()).toBe(false);
   });
 });
