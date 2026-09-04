@@ -24,5 +24,7 @@ export function useReadAloud() {
     if (on) speaker.current?.speak(text);
   }, [on]);
 
-  return { on, toggle, speakReply };
+  const stop = useCallback(() => { speaker.current?.stop(); }, []);
+
+  return { on, toggle, speakReply, stop };
 }
