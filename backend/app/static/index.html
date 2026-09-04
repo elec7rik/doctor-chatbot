@@ -4,188 +4,233 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Ask the Professor · My Longevity Hub</title>
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F6F7FB" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121320" media="(prefers-color-scheme: dark)">
+<script>
+  /* Set the theme before first paint (no flash). Default is light — the preferred look. */
+  (function(){ try { var t = localStorage.getItem("np-theme"); document.documentElement.setAttribute("data-theme", t === "dark" ? "dark" : "light"); } catch(e){ document.documentElement.setAttribute("data-theme","light"); } })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#F5F7F9; --surface:#FFFFFF; --user:#EAF2FA; --user-line:#CADFF2;
-  --ink:#132639; --ink-2:#41505E; --ink-3:#7C8894; --line:#E5E9ED;
-  --accent:#1789DA; --accent-ink:#0F5E9E; --accent-soft:#EAF3FC;
-  --chip-ink:#66727D;
-  --shadow:0 1px 1px rgba(16,40,60,.04), 0 6px 18px -12px rgba(16,40,60,.20);
+  /* iris ramp — the one accent (periwinkle → indigo) */
+  --iris-50:#F1F0FE; --iris-100:#E5E2FC; --iris-200:#D0CAF8; --iris-300:#B3A9F5;
+  --iris-400:#8A5CF0; --iris-500:#6D5DE8; --iris-600:#5B4BD6; --iris-700:#4B3AC9; --iris-800:#38299B;
+  /* neutrals — light (cool indigo cast) */
+  --bg:#F6F7FB; --surface:#FFFFFF; --surface-2:#EEEFF4; --user:#F1F0FE;
+  --ink:#1E2233; --ink-2:#454A63; --ink-3:#616679; --ink-4:#8A8FA3; --line:#E7E8F0;
+  /* semantic */
+  --accent:var(--iris-600); --accent-ink:var(--iris-700); --accent-soft:var(--iris-50);
+  --link:var(--iris-700); --focus:var(--iris-500);
+  --danger:#E5484D; --danger-ink:#BC3B36;
+  /* gradients (frozen recipes) */
+  --grad-orb-ring:conic-gradient(from 210deg,#B3A9F5,#8A5CF0,#6D5DE8,#B3A9F5,#8A5CF0);
+  --grad-orb-core:radial-gradient(circle at 34% 30%,#FBFAFF 0%,#C9BFFF 24%,#8A5CF0 56%,#5B4BD6 82%,#38299B 100%);
+  --grad-orb-glow:radial-gradient(circle,rgba(138,92,240,.45),transparent 62%);
+  --grad-greeting:linear-gradient(96deg,#6D5DE8,#8A5CF0 55%,#6D5DE8);
+  /* radius */
+  --r-xs:6px; --r-sm:10px; --r-md:14px; --r-lg:20px; --r-xl:28px; --r-full:9999px;
+  /* elevation — indigo-tinted, diffuse */
+  --sh-sm:0 1px 2px rgba(30,34,60,.04),0 6px 16px -10px rgba(70,60,150,.18);
+  --sh-md:0 2px 4px rgba(30,34,60,.05),0 14px 30px -14px rgba(70,60,150,.24);
+  --sh-lg:0 10px 44px -14px rgba(80,70,160,.30);
+  --sh-orb:0 24px 70px -16px rgba(110,94,230,.50);
+  /* motion */
+  --dur-fast:120ms; --dur-base:180ms; --ease:cubic-bezier(.2,0,0,1);
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0B0F14; --surface:#141C25; --user:#12314B; --user-line:#204B6F;
-  --ink:#E9EEF3; --ink-2:#AEBAC5; --ink-3:#78838E; --line:#232E39;
-  --accent:#39A6EE; --accent-ink:#9BD1F5; --accent-soft:#132330;
-  --chip-ink:#9AA6B1;
-  --shadow:0 1px 1px rgba(0,0,0,.3), 0 10px 26px -16px rgba(0,0,0,.7);
+:root[data-theme="dark"]{
+  --bg:#121320; --surface:#1B1D2B; --surface-2:#23263A; --user:#262552;
+  --ink:#E9E9F2; --ink-2:#ADB0C6; --ink-3:#838799; --ink-4:#5A5E74; --line:#2C2F45;
+  --accent:var(--iris-500); --accent-ink:var(--iris-300); --accent-soft:rgba(109,93,232,.16);
+  --link:var(--iris-300); --focus:var(--iris-300);
+  --danger:#F26A6E; --danger-ink:#F49B9E;
+  --sh-sm:0 2px 8px rgba(0,0,0,.40); --sh-md:0 8px 24px rgba(0,0,0,.50); --sh-lg:0 16px 48px rgba(0,0,0,.60);
+  --sh-orb:0 24px 70px -16px rgba(110,94,230,.42);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-theme="dark"]){
+  --bg:#121320; --surface:#1B1D2B; --surface-2:#23263A; --user:#262552;
+  --ink:#E9E9F2; --ink-2:#ADB0C6; --ink-3:#838799; --ink-4:#5A5E74; --line:#2C2F45;
+  --accent:var(--iris-500); --accent-ink:var(--iris-300); --accent-soft:rgba(109,93,232,.16);
+  --link:var(--iris-300); --focus:var(--iris-300);
+  --danger:#F26A6E; --danger-ink:#F49B9E;
+  --sh-sm:0 2px 8px rgba(0,0,0,.40); --sh-md:0 8px 24px rgba(0,0,0,.50); --sh-lg:0 16px 48px rgba(0,0,0,.60);
+  --sh-orb:0 24px 70px -16px rgba(110,94,230,.42);
 }}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
-  margin:0; background:var(--bg); color:var(--ink);
-  font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  margin:0; color:var(--ink);
+  background:
+    radial-gradient(120% 60% at 8% -8%, rgba(138,92,240,.10), transparent 55%),
+    radial-gradient(120% 55% at 100% 0%, rgba(109,93,232,.07), transparent 50%),
+    var(--bg);
+  font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   font-size:15.5px; line-height:1.55; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
   display:flex; justify-content:center;
 }
-.app{width:100%; max-width:780px; height:100dvh; display:flex; flex-direction:column; background:var(--bg)}
+:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+.app{width:100%; max-width:780px; height:100dvh; display:flex; flex-direction:column; background:transparent}
 
-/* ---------- header (echoes the catalogue cover, restrained) ---------- */
+/* ---------- header (light, translucent) ---------- */
 .hero{
-  position:sticky; top:0; z-index:5; color:#fff;
-  background:
-    radial-gradient(115% 150% at 6% 140%, rgba(23,137,218,.18), transparent 46%),
-    linear-gradient(180deg,#0C1218,#080B10);
-  border-bottom:1px solid rgba(255,255,255,.07);
+  position:sticky; top:0; z-index:20;
+  background:color-mix(in srgb, var(--bg) 80%, transparent);
+  -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
 }
-.hero-in{max-width:780px; margin:0 auto; padding:15px 22px 14px}
-.hrow{display:flex; align-items:center; justify-content:space-between; gap:14px}
-.lockup{display:flex; align-items:center; gap:12px; flex-wrap:wrap; min-width:0}
-.mark{flex:none; color:#fff; display:grid; place-items:center}
-.mark svg{display:block; width:32px; height:auto}
-.wordmark{font-weight:800; font-size:.95rem; letter-spacing:.15em; text-transform:uppercase; white-space:nowrap}
-.pill{font-size:10px; letter-spacing:.13em; text-transform:uppercase; color:rgba(233,240,247,.78);
-  border:1px solid rgba(255,255,255,.24); border-radius:999px; padding:3px 10px; white-space:nowrap}
-.rule{width:30px; height:2px; border-radius:2px; background:#2E9BE6; margin:12px 0 9px}
-.disc{font-size:11.5px; line-height:1.5; color:rgba(233,240,247,.62); max-width:60ch; text-wrap:pretty}
-.disc strong{color:rgba(255,255,255,.9); font-weight:600}
-.readaloud{display:inline-flex; align-items:center; gap:7px; flex:none; font:inherit; font-size:12.5px; font-weight:500;
-  cursor:pointer; white-space:nowrap; color:#EAF1F8; background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.2); border-radius:999px; padding:7px 13px;
-  transition:background .15s, border-color .15s, color .15s, scale .1s}
-.readaloud svg{width:15px; height:15px}
-.readaloud:hover{background:rgba(46,155,230,.16); border-color:rgba(46,155,230,.5)}
-.readaloud:active{scale:.96}
-.readaloud.on{background:#1789DA; border-color:#1789DA; color:#fff}
-.actions{display:flex; align-items:center; gap:8px}
-.ghostbtn{font:inherit; font-size:12.5px; font-weight:500; cursor:pointer; white-space:nowrap; color:rgba(233,240,247,.72);
-  background:transparent; border:1px solid transparent; border-radius:999px; padding:7px 11px;
-  transition:color .15s, background .15s, scale .1s}
-.ghostbtn:hover{color:#fff; background:rgba(255,255,255,.07)}
-.ghostbtn:active{scale:.96}
-@media (max-width:520px){ .pill{display:none} .ghostbtn{padding:7px 9px} .readaloud span{display:none} .readaloud{padding:7px 9px} }
+.hero-in{max-width:780px; margin:0 auto; width:100%; padding:12px 18px}
+.hrow{display:flex; align-items:center; justify-content:space-between; gap:12px}
+.lockup{display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-width:0}
+.mark{flex:none; color:var(--accent); display:grid; place-items:center}
+.mark svg{display:block; width:26px; height:auto}
+.wordmark{font-weight:800; font-size:.8rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink); white-space:nowrap}
+.pill{font-size:9.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--iris-700);
+  background:var(--iris-50); border:1px solid var(--iris-100); border-radius:var(--r-full); padding:3px 9px; white-space:nowrap}
+:root[data-theme="dark"] .pill{color:var(--iris-300); background:rgba(109,93,232,.16); border-color:rgba(109,93,232,.3)}
+.rule{width:26px; height:2px; border-radius:2px; background:var(--accent); margin:11px 0 7px}
+.disc{font-size:11.5px; line-height:1.5; color:var(--ink-3); max-width:64ch; text-wrap:pretty}
+.disc strong{color:var(--ink-2); font-weight:600}
+.actions{display:flex; align-items:center; gap:7px}
+.readaloud,.ghostbtn,.themetoggle{display:inline-flex; align-items:center; gap:6px; flex:none; font:inherit; font-size:12.5px;
+  font-weight:600; cursor:pointer; white-space:nowrap; color:var(--ink-2); background:var(--surface);
+  border:1px solid var(--line); border-radius:var(--r-full); padding:8px 12px; box-shadow:var(--sh-sm);
+  transition:color var(--dur-base), border-color var(--dur-base), background var(--dur-base), scale var(--dur-fast)}
+.readaloud svg,.themetoggle svg{width:16px; height:16px}
+.readaloud:hover,.ghostbtn:hover,.themetoggle:hover{color:var(--accent); border-color:var(--accent)}
+.readaloud:active,.ghostbtn:active,.themetoggle:active{scale:.95}
+.readaloud.on{background:var(--accent); border-color:var(--accent); color:#fff; box-shadow:0 6px 16px -8px rgba(91,75,214,.7)}
+.ghostbtn{background:transparent; box-shadow:none; color:var(--ink-3)}
+.ghostbtn:hover{color:var(--accent); background:var(--surface); box-shadow:var(--sh-sm)}
+.themetoggle{padding:8px 10px}
+.themetoggle .to-light{display:none}
+:root[data-theme="dark"] .themetoggle .to-dark{display:none}
+:root[data-theme="dark"] .themetoggle .to-light{display:inline}
+@media (max-width:560px){ .pill{display:none} .readaloud span{display:none} .readaloud{padding:8px 10px} .ghostbtn{padding:8px 10px} .hero-in{padding:11px 14px} }
 
 /* ---------- messages ---------- */
-.scroll{flex:1; overflow-y:auto; padding:24px 22px; background:var(--bg)}
-.thread{display:flex; flex-direction:column; gap:14px}
-.msg{display:flex; gap:10px; max-width:100%}
-.msg .b{padding:13px 16px; border-radius:16px; overflow-wrap:anywhere}
+.scroll{flex:1; overflow-y:auto; padding:22px 18px; -webkit-overflow-scrolling:touch}
+.thread{display:flex; flex-direction:column; gap:16px; width:100%; max-width:780px; margin:0 auto}
+.msg{display:flex; max-width:100%}
+.msg .b{padding:12px 16px; border-radius:var(--r-lg); font-size:15.5px; line-height:1.6; overflow-wrap:anywhere}
 .msg.bot{max-width:92%}
-.msg.bot .b{background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow); border-top-left-radius:6px}
-.msg.user{justify-content:flex-end}
-.msg.user .b{background:var(--user); border:1px solid var(--user-line); border-top-right-radius:6px; color:var(--ink); max-width:80%}
+.msg.bot .b{background:var(--surface); box-shadow:var(--sh-sm); border-top-left-radius:var(--r-xs); color:var(--ink)}
+:root[data-theme="dark"] .msg.bot .b{border:1px solid var(--line)}
+.msg.user{justify-content:flex-end; margin-left:auto}
+.msg.user .b{background:var(--user); border-top-right-radius:var(--r-xs); color:var(--ink); max-width:82%}
 .msg .b :first-child{margin-top:0}.msg .b :last-child{margin-bottom:0}
 .msg .b p{margin:.55em 0; text-wrap:pretty}
 .msg .b ul,.msg .b ol{margin:.55em 0; padding-left:1.25em}
-.msg .b li{margin:.24em 0}
-.msg .b li::marker{color:var(--accent)}
-.msg .b h3{font-size:1rem; font-weight:700; letter-spacing:-.01em; color:var(--ink); margin:.8em 0 .3em}
+.msg .b li{margin:.26em 0}
+.msg .b li::marker{color:var(--iris-500)}
+.msg .b h3{font-size:1.02rem; font-weight:700; letter-spacing:-.01em; color:var(--ink); margin:.8em 0 .3em}
 .msg .b strong{font-weight:650; color:var(--ink)}
-.msg .b code{background:var(--accent-soft); color:var(--accent-ink); padding:1px 5px; border-radius:5px; font-size:.9em}
-.msg .b a{color:var(--accent-ink); font-weight:600; text-decoration:underline; text-underline-offset:2px; text-decoration-thickness:1px}
+.msg .b em{font-style:italic}
+.msg .b code{background:var(--accent-soft); color:var(--accent-ink); padding:1px 5px; border-radius:var(--r-xs); font-size:.9em}
+.msg .b a{color:var(--link); font-weight:600; text-decoration:underline; text-underline-offset:2px; text-decoration-thickness:1px}
 .tier{display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
-  padding:2px 8px; border-radius:6px; background:var(--accent-soft); color:var(--accent-ink); white-space:nowrap}
+  padding:2px 8px; border-radius:var(--r-xs); background:var(--accent-soft); color:var(--accent-ink); white-space:nowrap; vertical-align:middle}
 
 /* ---------- welcome + chips ---------- */
-.welcome{text-align:center; margin:8vh auto 22px; max-width:32ch}
-.welcome .big{font-size:1.55rem; font-weight:800; letter-spacing:-.024em; line-height:1.14; color:var(--ink); text-wrap:balance}
-.welcome p{color:var(--ink-2); margin:.7em 0 0; text-wrap:pretty}
-.chips{display:flex; flex-wrap:wrap; gap:9px; justify-content:center; max-width:560px; margin:0 auto}
-.chip{font:inherit; font-size:13px; cursor:pointer; color:var(--ink); background:var(--surface);
-  border:1px solid var(--line); border-radius:11px; padding:10px 14px; box-shadow:var(--shadow);
-  transition:border-color .15s, color .15s, scale .1s}
+.welcome{display:flex; flex-direction:column; align-items:center; text-align:center; margin:6vh auto 20px; max-width:34ch}
+.welcome .big{font-size:1.6rem; font-weight:800; letter-spacing:-.024em; line-height:1.14; color:var(--ink); text-wrap:balance}
+.welcome .big .kw{background:var(--grad-greeting); -webkit-background-clip:text; background-clip:text; color:transparent}
+.welcome p{color:var(--ink-2); margin:.7em 0 0; font-size:14.5px; text-wrap:pretty}
+.chips{display:flex; flex-wrap:wrap; gap:9px; justify-content:center; max-width:420px; margin:0 auto}
+.chip{font:inherit; font-size:13.5px; cursor:pointer; color:var(--ink); background:var(--surface);
+  border:1px solid var(--line); border-radius:var(--r-lg); padding:10px 14px; box-shadow:var(--sh-sm);
+  transition:border-color var(--dur-base), color var(--dur-base), scale var(--dur-fast)}
 .chip:hover{border-color:var(--accent); color:var(--accent-ink)}
 .chip:active{scale:.96}
 
 /* ---------- typing ---------- */
-.typing{display:inline-flex; gap:4px; align-items:center; padding:4px 2px}
+.typing{display:inline-flex; gap:5px; align-items:center; padding:4px 2px}
 .typing i{width:7px;height:7px;border-radius:50%;background:var(--ink-3);animation:bob 1.1s infinite ease-in-out}
 .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
 @keyframes bob{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-4px);opacity:1}}
 @media (prefers-reduced-motion:reduce){.typing i{animation:none}}
 
 /* ---------- composer ---------- */
-.composer{padding:14px 18px 18px; border-top:1px solid var(--line); background:var(--bg)}
-.box{display:flex; gap:8px; align-items:flex-end; background:var(--surface); border:1px solid var(--line);
-  border-radius:18px; padding:8px 8px 8px 16px; box-shadow:var(--shadow); transition:border-color .15s}
-.box:focus-within{border-color:var(--accent)}
-textarea{flex:1; border:0; background:transparent; color:var(--ink); font:inherit; resize:none; max-height:140px; padding:8px 0; outline:none}
-textarea::placeholder{color:var(--ink-3)}
-.iconbtn,.send{flex:none; width:40px; height:40px; border-radius:10px; cursor:pointer; display:grid; place-items:center}
+.composer{padding:12px 18px calc(16px + env(safe-area-inset-bottom)); border-top:1px solid var(--line);
+  background:color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px)}
+.box{display:flex; gap:8px; align-items:flex-end; width:100%; max-width:780px; margin:0 auto; background:var(--surface);
+  border:1.5px solid var(--line); border-radius:var(--r-xl); padding:8px 8px 8px 16px; box-shadow:var(--sh-md); transition:border-color var(--dur-base)}
+.box:focus-within{border-color:var(--focus)}
+textarea{flex:1; border:0; background:transparent; color:var(--ink); font:inherit; font-size:16px; resize:none; max-height:140px; padding:9px 0; outline:none}
+textarea::placeholder{color:var(--ink-4)}
+.iconbtn,.send{flex:none; width:40px; height:40px; border-radius:var(--r-full); cursor:pointer; display:grid; place-items:center}
 .iconbtn svg,.send svg{width:19px; height:19px}
-.send{border:0; background:var(--accent); color:#fff; transition:opacity .15s, scale .1s}
-.send:disabled{opacity:.35; cursor:not-allowed}
-.send:active:not(:disabled){scale:.96}
-.iconbtn{border:1px solid var(--line); background:var(--surface); color:var(--ink-2); transition:border-color .15s, color .15s, scale .1s}
-.iconbtn:hover{border-color:var(--accent); color:var(--accent-ink)}
-.iconbtn:active{scale:.96}
-.iconbtn.active{background:#E5484D; color:#fff; border-color:transparent; animation:pulse 1.6s infinite}
+.send{border:0; background:var(--accent); color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 6px 16px -8px rgba(91,75,214,.7); transition:opacity var(--dur-base), scale var(--dur-fast)}
+.send:disabled{opacity:.4; cursor:not-allowed; box-shadow:none}
+.send:active:not(:disabled){scale:.94}
+.iconbtn{border:1px solid var(--line); background:var(--surface); color:var(--ink-2); transition:border-color var(--dur-base), color var(--dur-base), scale var(--dur-fast)}
+.iconbtn:hover{border-color:var(--accent); color:var(--accent)}
+.iconbtn:active{scale:.94}
+.iconbtn.active{background:var(--danger); color:#fff; border-color:transparent; animation:pulse 1.6s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(229,72,77,.42)}50%{box-shadow:0 0 0 6px rgba(229,72,77,0)}}
 @media (prefers-reduced-motion:reduce){.iconbtn.active{animation:none}}
-.foot{text-align:center; font-size:11px; letter-spacing:.01em; color:var(--ink-3); margin-top:10px; text-wrap:pretty}
+.foot{text-align:center; font-size:11px; letter-spacing:.01em; color:var(--ink-3); margin:10px auto 0; max-width:780px; text-wrap:pretty}
 
 /* ---------- talk mode (hold to talk, replies spoken) ---------- */
 .talk{display:none}
-.composer.talking .talk{display:block}
+.composer.talking .talk{display:block; width:100%; max-width:780px; margin:0 auto}
 .composer.talking .box{display:none}
 .hold{position:relative; display:flex; align-items:center; justify-content:center; gap:10px; width:100%; height:64px;
   font:inherit; font-size:16px; font-weight:600; color:var(--ink); background:var(--surface);
-  border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); cursor:pointer;
+  border:1.5px solid var(--line); border-radius:var(--r-xl); box-shadow:var(--sh-md); cursor:pointer;
   user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:none;
-  transition:background .12s, color .12s, border-color .12s, scale .1s}
+  transition:background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast), scale var(--dur-fast)}
 .hold svg{width:22px; height:22px}
 .hold:active{scale:.98}
 .hold.on{background:var(--accent); border-color:var(--accent); color:#fff; animation:holdpulse 1.6s infinite}
 .hold::after{content:""; position:absolute; left:18px; right:18px; bottom:8px; height:3px; border-radius:2px;
-  background:rgba(255,255,255,.45); transform:scaleX(var(--lvl,0)); transform-origin:left; transition:transform .08s linear}
-@keyframes holdpulse{0%,100%{box-shadow:0 0 0 0 rgba(23,137,218,.35)}50%{box-shadow:0 0 0 8px rgba(23,137,218,0)}}
+  background:rgba(255,255,255,.5); transform:scaleX(var(--lvl,0)); transform-origin:left; transition:transform .08s linear}
+@keyframes holdpulse{0%,100%{box-shadow:0 0 0 0 rgba(109,93,232,.35)}50%{box-shadow:0 0 0 8px rgba(109,93,232,0)}}
 @media (prefers-reduced-motion:reduce){.hold.on{animation:none}}
 .talk-text{min-height:22px; text-align:center; font-size:13.5px; color:var(--ink-2); margin-top:10px; text-wrap:pretty}
 .typelink{display:block; margin:6px auto 0; font:inherit; font-size:12.5px; color:var(--ink-3); background:none; border:0;
   cursor:pointer; text-decoration:underline; text-underline-offset:2px}
 .typelink:hover{color:var(--accent-ink)}
 
-/* ---------- voice call: Siri-style orb (replaces the transcript) ---------- */
+/* ---------- voice call: iris orb (replaces the transcript) ---------- */
 .voice-stage{display:none; flex:1; flex-direction:column; align-items:center; justify-content:center;
   gap:20px; padding:28px 20px; overflow-y:auto; text-align:center;
-  background:radial-gradient(120% 80% at 50% 32%, var(--accent-soft), var(--bg) 62%)}
+  background:radial-gradient(120% 80% at 50% 30%, var(--accent-soft), transparent 62%)}
 .app.incall .scroll{display:none}
 .app.incall .voice-stage{display:flex}
 .orb{position:relative; width:clamp(150px,46vw,210px); aspect-ratio:1; --lvl:0;
   transform:scale(calc(1 + var(--lvl)*.16)); transition:transform .1s ease}
 .orb span{position:absolute; border-radius:50%; inset:0}
-.orb .orb-glow{inset:-28%; background:radial-gradient(circle, rgba(55,166,238,.45), transparent 62%);
-  filter:blur(22px); animation:orb-breathe 3.8s ease-in-out infinite}
-.orb .orb-ring{background:conic-gradient(from 0deg,#39A6EE,#8fe0ff,#1789DA,#6ce6d2,#7db8ff,#39A6EE);
-  filter:blur(7px) saturate(1.15); opacity:.9; animation:orb-spin 9s linear infinite}
-.orb .orb-core{inset:15%;
-  background:radial-gradient(circle at 36% 30%,#f2ffff 0%,#b9ecff 22%,#4bb4f2 55%,#1178c9 82%,#0d5794 100%);
-  box-shadow:0 10px 40px rgba(23,137,218,.45), inset -6px -8px 22px rgba(6,60,105,.55), inset 8px 8px 26px rgba(255,255,255,.55);
+.orb .orb-glow{inset:-26%; background:var(--grad-orb-glow); filter:blur(20px); animation:orb-breathe 3.8s ease-in-out infinite}
+.orb .orb-ring{background:var(--grad-orb-ring); filter:blur(6px) saturate(1.15); opacity:.92; animation:orb-spin 9s linear infinite}
+.orb .orb-core{inset:14%; background:var(--grad-orb-core);
+  box-shadow:0 10px 40px rgba(91,75,214,.45), inset -6px -8px 22px rgba(46,25,120,.5), inset 8px 8px 26px rgba(255,255,255,.6);
   animation:orb-breathe 3.8s ease-in-out infinite}
+.welcome .orb{width:112px; margin:0 auto 22px; filter:drop-shadow(var(--sh-orb))}
 .orb.listening .orb-ring{animation-duration:3.4s}
 .orb.listening .orb-core{animation-duration:1.5s}
 .orb.thinking .orb-ring{animation-duration:1.5s; opacity:1}
-.orb.thinking .orb-core{filter:saturate(.82) brightness(.95)}
+.orb.thinking .orb-core{filter:saturate(.85) brightness(.97)}
 .orb.speaking .orb-ring{animation-duration:2.2s}
 .orb.speaking .orb-core{animation:orb-speak 1s ease-in-out infinite}
 @keyframes orb-spin{to{transform:rotate(360deg)}}
-@keyframes orb-breathe{0%,100%{transform:scale(.95); opacity:.9}50%{transform:scale(1.05); opacity:1}}
+@keyframes orb-breathe{0%,100%{transform:scale(.95); opacity:.92}50%{transform:scale(1.05); opacity:1}}
 @keyframes orb-speak{0%,100%{transform:scale(.97)}50%{transform:scale(1.06)}}
 @media (prefers-reduced-motion:reduce){.orb *{animation:none!important}}
 .orb-status{min-height:20px; font-size:15px; font-weight:600; color:var(--ink-2); letter-spacing:-.01em}
 .voice-cards{display:flex; flex-direction:column; gap:10px; width:100%; max-width:420px}
-.voice-note{width:100%; max-width:420px; text-align:left; padding:12px 14px; border-radius:14px;
-  background:var(--accent-soft); color:var(--accent-ink); border:1px solid var(--user-line); font-size:14px; line-height:1.4}
+.voice-note{width:100%; max-width:420px; text-align:left; padding:12px 14px; border-radius:var(--r-md);
+  background:var(--accent-soft); color:var(--accent-ink); border:1px solid var(--line); font-size:14px; line-height:1.4}
 /* ---------- link card: a tappable hook instead of a spoken URL ---------- */
 .linkcard{display:flex; align-items:center; gap:12px; text-decoration:none; text-align:left;
-  padding:12px 14px; border-radius:14px; border:1px solid var(--line); background:var(--surface);
-  box-shadow:0 2px 10px rgba(19,38,57,.06); transition:border-color .15s, box-shadow .15s, transform .1s}
-.linkcard:hover{border-color:var(--accent); box-shadow:0 6px 20px rgba(23,137,218,.18)}
+  padding:12px 14px; border-radius:var(--r-lg); border:1px solid var(--line); background:var(--surface);
+  box-shadow:var(--sh-sm); transition:border-color var(--dur-base), box-shadow var(--dur-base), transform var(--dur-fast)}
+.linkcard:hover{border-color:var(--accent); box-shadow:var(--sh-md)}
 .linkcard:active{transform:scale(.99)}
 .msg .b a.linkcard{text-decoration:none; color:inherit; font-weight:inherit}
-.lc-ic{flex:none; width:40px; height:40px; border-radius:11px; display:grid; place-items:center;
+.lc-ic{flex:none; width:40px; height:40px; border-radius:var(--r-md); display:grid; place-items:center;
   background:var(--accent-soft); color:var(--accent-ink)}
 .lc-ic svg{width:20px; height:20px}
 .lc-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
@@ -214,6 +259,10 @@ textarea::placeholder{color:var(--ink-3)}
           <span class="pill">The Nutty Professor</span>
         </div>
         <div class="actions">
+          <button class="themetoggle" id="themeToggle" type="button" aria-pressed="false" aria-label="Switch between light and dark mode" title="Switch to dark mode">
+            <svg class="to-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+            <svg class="to-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          </button>
           <button class="ghostbtn" id="newChat" title="Start a new conversation">New chat</button>
           <button class="readaloud" id="readAloud" aria-pressed="false" title="Read answers aloud">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -237,7 +286,8 @@ textarea::placeholder{color:var(--ink-3)}
   <div class="scroll" id="scroll">
     <div class="thread" id="thread">
       <div class="welcome" id="welcome">
-        <div class="big">Straight answers on living longer, better.</div>
+        <div class="orb" aria-hidden="true"><span class="orb-glow"></span><span class="orb-ring"></span><span class="orb-core"></span></div>
+        <div class="big">Straight answers on <span class="kw">living longer</span>, better.</div>
         <p>Fasting, sleep, supplements, peptides, recovery, energy — the honest version, no hype.</p>
       </div>
       <div class="chips" id="chips">
@@ -309,7 +359,11 @@ const GUIDES = {
   "skincare":{title:"Skincare That Actually Works"},
   "hair-loss":{title:"Hair Loss and Hair Growth"},
   "testosterone":{title:"Low Testosterone: Signs \u0026 What Helps"},
-  "menopause":{title:"Menopause \u0026 Perimenopause"}
+  "menopause":{title:"Menopause \u0026 Perimenopause"},
+  "injury-recovery":{title:"Injury Recovery: How to Heal Faster"},
+  "muscle-growth":{title:"Building Muscle \u0026 Training Recovery"},
+  "gut-health":{title:"Gut Health Basics"},
+  "peptides-101":{title:"Research Peptides 101"}
 };
 function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 function inline(s){
@@ -798,6 +852,19 @@ restore();
 document.getElementById("newChat").addEventListener("click", () => {
   try { localStorage.removeItem("np-history"); localStorage.removeItem("np-session"); } catch(e){}
   location.reload();
+});
+
+/* ---------- light / dark mode toggle (default light; choice is remembered) ---------- */
+const themeToggle = document.getElementById("themeToggle");
+function applyTheme(mode){
+  document.documentElement.setAttribute("data-theme", mode);
+  themeToggle.setAttribute("aria-pressed", String(mode === "dark"));
+  themeToggle.title = mode === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  try { localStorage.setItem("np-theme", mode); } catch(e){}
+}
+applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
+themeToggle.addEventListener("click", () => {
+  applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
 });
 
 input.focus();

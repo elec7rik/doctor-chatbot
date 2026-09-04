@@ -23,6 +23,14 @@ GUIDES = [
      "topics": ["testosterone", "low testosterone", "libido", "trt", "testosterone booster"]},
     {"slug": "menopause", "title": "Menopause and Perimenopause: Symptoms, HRT and Support",
      "topics": ["menopause", "perimenopause", "hot flushes", "hrt", "night sweats"]},
+    {"slug": "injury-recovery", "title": "Injury Recovery: How to Heal Faster",
+     "topics": ["injury", "recovery", "heal faster", "tendon", "sprain", "strain", "soft tissue", "bpc-157", "tb-500"]},
+    {"slug": "muscle-growth", "title": "Building Muscle and Recovering from Training",
+     "topics": ["muscle", "build muscle", "strength", "training", "gym", "gains", "protein", "creatine", "cjc-1295", "ipamorelin"]},
+    {"slug": "gut-health", "title": "Gut Health Basics: What Actually Helps",
+     "topics": ["gut", "gut health", "digestion", "bloating", "microbiome", "probiotics", "ibs", "kpv"]},
+    {"slug": "peptides-101", "title": "Research Peptides 101: What They Are, Safety and UK Law",
+     "topics": ["peptides", "research peptides", "what are peptides", "are peptides legal", "peptide safety", "research use only"]},
 ]
 
 _BY_SLUG = {g["slug"]: g for g in GUIDES}
