@@ -219,3 +219,9 @@
   .orb .orb-glow,.orb .orb-ring,.orb .orb-core,.typing i{animation:none!important}
   .sidenav{transition:none}
 }
+
+@layer components {
+  .mic.recording{background:var(--color-danger); color:#fff; border-color:transparent; animation:record-pulse 1.6s infinite}
+}
+@keyframes record-pulse{0%,100%{box-shadow:0 0 0 0 rgba(229,72,77,.42)}50%{box-shadow:0 0 0 6px rgba(229,72,77,0)}}
+@media (prefers-reduced-motion:reduce){ .mic.recording{animation:none} }
