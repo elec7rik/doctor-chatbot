@@ -31,6 +31,14 @@ GUIDES = [
      "topics": ["gut", "gut health", "digestion", "bloating", "microbiome", "probiotics", "ibs", "kpv"]},
     {"slug": "peptides-101", "title": "Research Peptides 101: What They Are, Safety and UK Law",
      "topics": ["peptides", "research peptides", "what are peptides", "are peptides legal", "peptide safety", "research use only"]},
+    {"slug": "longevity-basics", "title": "Living Longer: The Habits That Actually Work",
+     "topics": ["longevity", "live longer", "healthy ageing", "healthspan", "anti-aging", "nad", "how to live longer"]},
+    {"slug": "weight-loss", "title": "Losing Fat and Keeping It Off: A No-Hype Guide",
+     "topics": ["weight loss", "lose weight", "fat loss", "lose belly fat", "metabolism", "fat burner", "diet"]},
+    {"slug": "stress-focus", "title": "Stress, Mood and Focus: Calming the Noise",
+     "topics": ["stress", "anxiety", "mood", "low mood", "brain fog", "focus", "concentration", "mental clarity"]},
+    {"slug": "immunity", "title": "Supporting Your Immune System: What Actually Helps",
+     "topics": ["immunity", "immune system", "immune support", "getting sick", "colds", "flu", "vitamin c"]},
 ]
 
 _BY_SLUG = {g["slug"]: g for g in GUIDES}
