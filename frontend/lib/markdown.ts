@@ -87,3 +87,17 @@ export function extractGuideSlugs(t: string): string[] {
   }
   return seen;
 }
+
+export function toSpeechText(full: string): string {
+  let t = stripDisclaimer(stripGuideTokens(full));
+  t = t
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(Strong|Moderate|Promising|Animal-only)\*/g, "$1")
+    .replace(/(^|[^*])\*(?!\s)([^*]+?)\*(?!\*)/g, "$1$2")
+    .replace(/`([^`]+?)`/g, "$1")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/^[-*]\s+/gm, "")
+    .replace(/^\d+[.)]\s+/gm, "");
+  return t.replace(/\s+/g, " ").trim();
+}

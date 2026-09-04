@@ -45,4 +45,11 @@ describe("useChat", () => {
     });
     await waitFor(() => expect(result.current.messages.at(-1)!.html).toMatch(/couldn.t reach the professor/i));
   });
+  it("calls onReplyComplete with the spoken text after a successful reply", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(streamResponse("Take **magnesium**. [[guide:better-sleep]]"));
+    const onReplyComplete = vi.fn();
+    const { result } = renderHook(() => useChat({ onReplyComplete }));
+    await act(async () => { await result.current.send("hi"); });
+    await waitFor(() => expect(onReplyComplete).toHaveBeenCalledWith("Take magnesium."));
+  });
 });

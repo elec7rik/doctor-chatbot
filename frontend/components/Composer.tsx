@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
+import { useDictation } from "@/lib/useDictation";
 
 export function Composer({
   busy,
@@ -13,6 +14,7 @@ export function Composer({
   const [value, setValue] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
   const hasText = value.trim().length > 0;
+  const dictation = useDictation((t) => setValue((v) => (v.trim() ? v.trim() + " " + t : t)));
 
   function autosize() {
     const el = ref.current;
@@ -35,7 +37,7 @@ export function Composer({
           ref={ref}
           className="field"
           rows={1}
-          placeholder="Ask the professor…"
+          placeholder={dictation.processing ? "Working out what you said…" : "Ask the professor…"}
           autoComplete="off"
           value={value}
           disabled={busy}
@@ -50,13 +52,21 @@ export function Composer({
             }
           }}
         />
-        <button className="pill-btn mic" type="button" disabled aria-label="Speak your question (coming soon)">
-          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="9" y="3" width="6" height="11" rx="3" />
-            <path d="M5 11a7 7 0 0 0 14 0" />
-            <line x1="12" y1="18" x2="12" y2="21" />
-          </svg>
-        </button>
+        {dictation.supported && (
+          <button
+            className={"pill-btn mic" + (dictation.listening ? " recording" : "")}
+            type="button"
+            aria-label={dictation.listening ? "Stop dictation" : "Speak your question"}
+            aria-pressed={dictation.listening}
+            onClick={() => void dictation.toggle()}
+          >
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="3" width="6" height="11" rx="3" />
+              <path d="M5 11a7 7 0 0 0 14 0" />
+              <line x1="12" y1="18" x2="12" y2="21" />
+            </svg>
+          </button>
+        )}
         {hasText ? (
           <button className="pill-btn send" type="button" aria-label="Send" onClick={submit}>
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

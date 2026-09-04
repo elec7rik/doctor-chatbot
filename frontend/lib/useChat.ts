@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { streamChat } from "./api";
-import { renderMarkdown, stripDisclaimer, stripGuideTokens, extractGuideSlugs, esc } from "./markdown";
+import { renderMarkdown, stripDisclaimer, stripGuideTokens, extractGuideSlugs, esc, toSpeechText } from "./markdown";
 import { loadHistory, saveHistory, loadSession, saveSession, clearChat } from "./storage";
 import type { Turn } from "./schemas";
 
@@ -20,12 +20,16 @@ function userMessage(text: string): ChatMessage {
   return { role: "user", html: esc(text).replace(/\n/g, "<br>"), guideSlugs: [] };
 }
 
-export function useChat() {
+export function useChat(opts?: { onReplyComplete?: (spokenText: string) => void }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [busy, setBusy] = useState(false);
   const [started, setStarted] = useState(false);
   const history = useRef<Turn[]>([]);
   const session = useRef<string | null>(null);
+  // Hold the latest callback in a ref so `send` (memoised on [busy]) always
+  // calls the current handler, even after the read-aloud toggle changes it.
+  const onReplyComplete = useRef(opts?.onReplyComplete);
+  onReplyComplete.current = opts?.onReplyComplete;
 
   useEffect(() => {
     history.current = loadHistory();
@@ -84,6 +88,7 @@ export function useChat() {
         setBot(r.html, r.guideSlugs);
         history.current = [...history.current, { role: "user", text }, { role: "model", text: res.full }];
         saveHistory(history.current);
+        onReplyComplete.current?.(toSpeechText(res.full));
       } catch (err) {
         const msg = esc(String((err as Error).message || err));
         setBot(

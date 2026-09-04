@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useChat } from "@/lib/useChat";
+import { useReadAloud } from "@/lib/useReadAloud";
 import { Header } from "./Header";
 import { SideNav } from "./SideNav";
 import { Disclaimer } from "./Disclaimer";
@@ -21,7 +22,8 @@ const GUIDE_TITLES: Record<string, string> = {
 };
 
 export function ChatShell() {
-  const { messages, busy, started, send, newChat } = useChat();
+  const readAloud = useReadAloud();
+  const { messages, busy, started, send, newChat } = useChat({ onReplyComplete: readAloud.speakReply });
   const [drawer, setDrawer] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -32,7 +34,7 @@ export function ChatShell() {
 
   return (
     <div className="app">
-      <SideNav open={drawer} onClose={() => setDrawer(false)} onNewChat={newChat} />
+      <SideNav open={drawer} onClose={() => setDrawer(false)} onNewChat={newChat} readAloud={readAloud} />
       <div className="main">
         <Header onMenu={() => setDrawer(true)} onNewChat={newChat} />
         <div className="scroll" ref={scrollRef}>

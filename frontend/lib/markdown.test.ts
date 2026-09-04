@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { renderMarkdown, stripGuideTokens, extractGuideSlugs } from "./markdown";
+import { renderMarkdown, stripGuideTokens, extractGuideSlugs, toSpeechText } from "./markdown";
 
 describe("markdown", () => {
   it("escapes HTML in user input", () => {
@@ -24,5 +24,15 @@ describe("markdown", () => {
   it("strips and extracts guide tokens", () => {
     expect(stripGuideTokens("hi [[guide:better-sleep]]")).toBe("hi");
     expect(extractGuideSlugs("a [[guide:hair-loss]] b [[guide:hair-loss]]")).toEqual(["hair-loss"]);
+  });
+});
+
+describe("toSpeechText", () => {
+  it("strips markdown, tiers, guide tokens and links to plain speech", () => {
+    const out = toSpeechText("Try **magnesium** *Promising* and `zinc`. See [the guide](https://x.co). [[guide:better-sleep]]");
+    expect(out).toBe("Try magnesium Promising and zinc. See the guide.");
+  });
+  it("drops heading and list markers", () => {
+    expect(toSpeechText("# Sleep\n- one\n- two")).toBe("Sleep one two");
   });
 });

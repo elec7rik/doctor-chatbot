@@ -47,3 +47,19 @@ export function clearChat(): void {
     /* ignore */
   }
 }
+
+const RKEY = "np-readaloud";
+export function loadReadAloud(): boolean {
+  try {
+    return localStorage.getItem(RKEY) === "1";
+  } catch {
+    return false;
+  }
+}
+export function saveReadAloud(on: boolean): void {
+  try {
+    localStorage.setItem(RKEY, on ? "1" : "0");
+  } catch {
+    /* ignore */
+  }
+}
