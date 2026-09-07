@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+build
+coverage
+.git
+.gitignore
+Dockerfile
+.dockerignore
+README.md
+npm-debug.log*
+*.tsbuildinfo
+
+# Never bake local env files into the image — NEXT_PUBLIC_* comes via --build-arg
+# and server-side config (BACKEND_URL) via the container runtime environment.
+.env*

@@ -1,0 +1,150 @@
+# PRODUCTION CI/CD for The Nutty Professor (My Longevity Hub).
+#
+# Fires only on a dated release branch (release/YY.MM.DD, cut from main) or manual
+# dispatch — never on a plain push to main. Deploys BOTH services to the -prod
+# Cloud Run services in doctor-chatbot-507406, so prod always matches the release
+# as a consistent pair (no path filter). Backend deploys first; the frontend then
+# derives the backend's prod URL for its baked wss:// and runtime BACKEND_URL.
+#
+# min-instances is 0 (scale-to-zero) pre-launch — raise the frontend/backend to 1
+# at launch to remove cold starts. One-time bootstrap: docs/DEPLOY.md.
+name: Production CI/CD
+
+on:
+  push:
+    branches: [release/**]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '24'
+  PYTHON_VERSION: '3.12'
+  GCP_PROJECT_ID: doctor-chatbot-507406
+  GCP_REGION: europe-west4
+  AR_REGISTRY: europe-west4-docker.pkg.dev/doctor-chatbot-507406/doctor-chatbot
+  BACKEND_SERVICE: nutty-professor-api-prod
+  FRONTEND_SERVICE: nutty-professor-web-prod
+  RUNTIME_SA: nutty-prof-run@doctor-chatbot-507406.iam.gserviceaccount.com
+
+jobs:
+  # ── gates (run once before any deploy) ───────────────────────────────────────
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r backend/requirements.txt
+      - name: Smoke import
+        run: cd backend && python -c "import app.main; print('backend imports OK')"
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm install
+      - run: npm run lint
+      - run: npm test -- --run
+      - name: Build (compiles + type-checks)
+        run: npm run build
+        env:
+          NEXT_PUBLIC_LIVE_WS_URL: wss://localhost/live
+
+  # ── deploy backend ──────────────────────────────────────────────────────────
+  deploy-backend:
+    needs: [test-backend, test-frontend]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
+      - name: Build and push image
+        run: |
+          docker build \
+            -t ${{ env.AR_REGISTRY }}/${{ env.BACKEND_SERVICE }}:${{ github.sha }} \
+            -t ${{ env.AR_REGISTRY }}/${{ env.BACKEND_SERVICE }}:prod .
+          docker push ${{ env.AR_REGISTRY }}/${{ env.BACKEND_SERVICE }}:${{ github.sha }}
+          docker push ${{ env.AR_REGISTRY }}/${{ env.BACKEND_SERVICE }}:prod
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.BACKEND_SERVICE }} \
+            --image ${{ env.AR_REGISTRY }}/${{ env.BACKEND_SERVICE }}:${{ github.sha }} \
+            --region ${{ env.GCP_REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --service-account ${{ env.RUNTIME_SA }} \
+            --port 8080 \
+            --memory 512Mi \
+            --timeout 3600 \
+            --min-instances 0 \
+            --max-instances 5 \
+            --project ${{ env.GCP_PROJECT_ID }}
+
+  # ── deploy frontend (after backend, so its prod URL exists) ──────────────────
+  deploy-frontend:
+    needs: [deploy-backend]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Resolve backend URL
+        id: backend
+        run: |
+          URL=$(gcloud run services describe ${{ env.BACKEND_SERVICE }} \
+            --region ${{ env.GCP_REGION }} --project ${{ env.GCP_PROJECT_ID }} \
+            --format='value(status.url)')
+          if [ -z "$URL" ]; then echo "Backend prod service not found"; exit 1; fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "wss=wss://${URL#https://}/live" >> "$GITHUB_OUTPUT"
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
+      - name: Build and push image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_LIVE_WS_URL="${{ steps.backend.outputs.wss }}" \
+            -t ${{ env.AR_REGISTRY }}/${{ env.FRONTEND_SERVICE }}:${{ github.sha }} \
+            -t ${{ env.AR_REGISTRY }}/${{ env.FRONTEND_SERVICE }}:prod \
+            frontend
+          docker push ${{ env.AR_REGISTRY }}/${{ env.FRONTEND_SERVICE }}:${{ github.sha }}
+          docker push ${{ env.AR_REGISTRY }}/${{ env.FRONTEND_SERVICE }}:prod
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.FRONTEND_SERVICE }} \
+            --image ${{ env.AR_REGISTRY }}/${{ env.FRONTEND_SERVICE }}:${{ github.sha }} \
+            --region ${{ env.GCP_REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --service-account ${{ env.RUNTIME_SA }} \
+            --port 3000 \
+            --memory 512Mi \
+            --min-instances 0 \
+            --max-instances 5 \
+            --update-env-vars BACKEND_URL="${{ steps.backend.outputs.url }}" \
+            --project ${{ env.GCP_PROJECT_ID }}

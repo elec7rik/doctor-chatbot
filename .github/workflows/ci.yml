@@ -1,0 +1,186 @@
+# Staging CI/CD for The Nutty Professor (My Longevity Hub).
+#
+# Monorepo: one repo, two Cloud Run services in the single GCP project
+# doctor-chatbot-507406. `dorny/paths-filter` only rebuilds/deploys the service
+# whose files changed. Push to main -> staging; prod is prod.yml (release/**).
+#
+# The voice /live WebSocket is opened browser->backend directly, so the frontend
+# image bakes the backend's wss:// URL (NEXT_PUBLIC_LIVE_WS_URL) at build time and
+# the server-side proxy reads BACKEND_URL at runtime — both derived from the
+# backend service's own Cloud Run URL, so nothing is hardcoded.
+#
+# One-time bootstrap (APIs, Artifact Registry, service accounts, WIF secrets):
+# see docs/DEPLOY.md. Run it before the first push.
+name: Staging CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '24'
+  PYTHON_VERSION: '3.12'
+  GCP_PROJECT_ID: doctor-chatbot-507406
+  GCP_REGION: europe-west4
+  AR_REGISTRY: europe-west4-docker.pkg.dev/doctor-chatbot-507406/doctor-chatbot
+  BACKEND_SERVICE: nutty-professor-api-staging
+  FRONTEND_SERVICE: nutty-professor-web-staging
+  RUNTIME_SA: nutty-prof-run@doctor-chatbot-507406.iam.gserviceaccount.com
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'prompts/**'
+              - 'catalogue/**'
+              - 'Dockerfile'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/ci.yml'
+
+  # ── backend: import smoke-test (no DB, no pytest suite) ─────────────────────
+  test-backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r backend/requirements.txt
+      - name: Smoke import (compiles the app + loads prompt/catalogue/guides)
+        run: cd backend && python -c "import app.main; print('backend imports OK')"
+
+  # ── frontend: lint + unit tests + prod build (the type gate) ────────────────
+  test-frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      # npm install (not ci) — macOS lockfile omits @tailwindcss/oxide's
+      # Linux-only @emnapi wasm-fallback deps.
+      - run: npm install
+      - run: npm run lint
+      - run: npm test -- --run
+      # `next build` IS the type gate (Next 16 generates route/layout types).
+      - name: Build (compiles + type-checks)
+        run: npm run build
+        env:
+          NEXT_PUBLIC_LIVE_WS_URL: wss://localhost/live
+
+  # ── deploy backend ──────────────────────────────────────────────────────────
+  deploy-backend:
+    needs: [changes, test-backend]
+    if: (github.event_name == 'push' && needs.changes.outputs.backend == 'true') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
+      - name: Build and push image
+        run: |
+          docker build \
+            -t ${{ env.AR_REGISTRY }}/${{ env.BACKEND_SERVICE }}:${{ github.sha }} \
+            -t ${{ env.AR_REGISTRY }}/${{ env.BACKEND_SERVICE }}:staging .
+          docker push ${{ env.AR_REGISTRY }}/${{ env.BACKEND_SERVICE }}:${{ github.sha }}
+          docker push ${{ env.AR_REGISTRY }}/${{ env.BACKEND_SERVICE }}:staging
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.BACKEND_SERVICE }} \
+            --image ${{ env.AR_REGISTRY }}/${{ env.BACKEND_SERVICE }}:${{ github.sha }} \
+            --region ${{ env.GCP_REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --service-account ${{ env.RUNTIME_SA }} \
+            --port 8080 \
+            --memory 512Mi \
+            --timeout 3600 \
+            --min-instances 0 \
+            --max-instances 3 \
+            --project ${{ env.GCP_PROJECT_ID }}
+
+  # ── deploy frontend (derives the backend URL, so nothing is hardcoded) ───────
+  deploy-frontend:
+    needs: [changes, test-frontend]
+    if: (github.event_name == 'push' && needs.changes.outputs.frontend == 'true') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Resolve backend URL
+        id: backend
+        run: |
+          URL=$(gcloud run services describe ${{ env.BACKEND_SERVICE }} \
+            --region ${{ env.GCP_REGION }} --project ${{ env.GCP_PROJECT_ID }} \
+            --format='value(status.url)')
+          if [ -z "$URL" ]; then echo "Backend service not found — deploy it first (see docs/DEPLOY.md)"; exit 1; fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "wss=wss://${URL#https://}/live" >> "$GITHUB_OUTPUT"
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
+      - name: Build and push image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_LIVE_WS_URL="${{ steps.backend.outputs.wss }}" \
+            -t ${{ env.AR_REGISTRY }}/${{ env.FRONTEND_SERVICE }}:${{ github.sha }} \
+            -t ${{ env.AR_REGISTRY }}/${{ env.FRONTEND_SERVICE }}:staging \
+            frontend
+          docker push ${{ env.AR_REGISTRY }}/${{ env.FRONTEND_SERVICE }}:${{ github.sha }}
+          docker push ${{ env.AR_REGISTRY }}/${{ env.FRONTEND_SERVICE }}:staging
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.FRONTEND_SERVICE }} \
+            --image ${{ env.AR_REGISTRY }}/${{ env.FRONTEND_SERVICE }}:${{ github.sha }} \
+            --region ${{ env.GCP_REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --service-account ${{ env.RUNTIME_SA }} \
+            --port 3000 \
+            --memory 512Mi \
+            --min-instances 0 \
+            --max-instances 3 \
+            --update-env-vars BACKEND_URL="${{ steps.backend.outputs.url }}" \
+            --project ${{ env.GCP_PROJECT_ID }}
