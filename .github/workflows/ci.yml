@@ -136,8 +136,14 @@ jobs:
 
   # ── deploy frontend (derives the backend URL, so nothing is hardcoded) ───────
   deploy-frontend:
-    needs: [changes, test-frontend]
-    if: (github.event_name == 'push' && needs.changes.outputs.frontend == 'true') || github.event_name == 'workflow_dispatch'
+    # Waits for deploy-backend when both run (so the backend URL resolves), but
+    # still deploys on a frontend-only change (deploy-backend then 'skipped').
+    needs: [changes, test-frontend, deploy-backend]
+    if: >-
+      !cancelled()
+      && needs.test-frontend.result == 'success'
+      && (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped')
+      && ((github.event_name == 'push' && needs.changes.outputs.frontend == 'true') || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       contents: read
