@@ -6,8 +6,10 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from pydantic import BaseModel
 
+from google.genai import errors as genai_errors
+
 from . import live, ratelimit, sessions, stt, tts
-from .agent import process_message, stream_message
+from .agent import process_message, stream_message, is_rate_limit
 from .sanitize import sanitize_stream
 from .config import settings
 
@@ -121,11 +123,37 @@ def chat_stream(body: ChatIn, request: Request):
     stateless = body.history is not None
     history = _sanitise_history(body.history) if stateless else sessions.get_history(sid)
 
+    # Pull the first chunk eagerly so an upstream 429 (Vertex RESOURCE_EXHAUSTED)
+    # surfaces as a real HTTP status *before* we commit a 200 streaming response.
+    # Otherwise the stream returns 200 then dies mid-body, and the browser only
+    # sees a truncated stream ("couldn't reach the professor") with no way to tell
+    # a rate-limit from an outage.
+    stream = sanitize_stream(stream_message(history, message))
+    try:
+        first: str | None = next(stream)
+    except StopIteration:
+        first = None
+    except genai_errors.APIError as e:
+        if is_rate_limit(e):
+            raise HTTPException(
+                status_code=429,
+                detail="The professor's getting a lot of questions right now — give it a few seconds and try again.",
+            )
+        raise HTTPException(status_code=502, detail="The professor is momentarily unavailable — please try again.")
+
     def generate():
         collected: list[str] = []
-        for piece in sanitize_stream(stream_message(history, message)):
-            collected.append(piece)
-            yield piece
+        if first is not None:
+            collected.append(first)
+            yield first
+        try:
+            for piece in stream:
+                collected.append(piece)
+                yield piece
+        except genai_errors.APIError:
+            # A 429 (or other upstream error) after we've already committed a 200
+            # stream: we can't change the status now, so close the answer softly.
+            yield "\n\n_(Sorry — I got cut off there. Please ask me that again in a moment.)_"
         if not stateless:  # legacy in-memory path keeps its own transcript
             full = "".join(collected)
             sessions.append(sid, "user", message)

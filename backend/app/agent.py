@@ -47,18 +47,33 @@ def _credentials():
     return None  # let google-genai use ADC
 
 
-_client = None
+_clients: dict[str, genai.Client] = {}
 
 
-def client():
-    global _client
-    if _client is None:
-        kwargs = dict(vertexai=True, project=settings.GCP_PROJECT_ID, location=settings.GCP_REGION)
+def client(location: str | None = None) -> genai.Client:
+    """A genai client for the given Vertex region (defaults to GCP_REGION).
+    Cached per-region so chat (GCP_REGION) and the voice Live call
+    (GEMINI_LIVE_REGION) can each hold their own client."""
+    loc = location or settings.GCP_REGION
+    inst = _clients.get(loc)
+    if inst is None:
+        kwargs = dict(vertexai=True, project=settings.GCP_PROJECT_ID, location=loc)
         creds = _credentials()
         if creds is not None:
             kwargs["credentials"] = creds
-        _client = genai.Client(**kwargs)
-    return _client
+        inst = genai.Client(**kwargs)
+        _clients[loc] = inst
+    return inst
+
+
+def is_rate_limit(exc: Exception) -> bool:
+    """True when a Vertex error is a rate/quota limit (429 RESOURCE_EXHAUSTED),
+    as opposed to a genuine outage. Shared by the chat stream and the voice relay
+    so both can degrade to a friendly 'try again shortly' message."""
+    if getattr(exc, "code", None) == 429:
+        return True
+    s = str(exc)
+    return "RESOURCE_EXHAUSTED" in s or "429" in s
 
 
 def _to_contents(history, user_message):

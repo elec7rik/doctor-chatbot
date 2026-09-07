@@ -224,7 +224,7 @@ async def relay(ws) -> None:
     stop = asyncio.Event()
     guard = {"tripped": False}  # once an emergency is heard this turn, drop the model's audio
     try:
-        async with agent.client().aio.live.connect(
+        async with agent.client(settings.GEMINI_LIVE_REGION).aio.live.connect(
             model=settings.GEMINI_LIVE_MODEL, config=live_config()
         ) as session:
             await _send(ws, {"type": "ready"})
@@ -318,8 +318,12 @@ async def relay(ws) -> None:
                 t.cancel()
             await asyncio.gather(up, down, return_exceptions=True)
     except Exception as e:  # noqa: BLE001 — report and close cleanly
+        if agent.is_rate_limit(e):
+            text = "The professor's line is very busy right now — please hang up and try again in a few moments."
+        else:
+            text = "Something interrupted the call — please try again."
         try:
-            await _send(ws, {"type": "error", "text": str(e)[:200]})
+            await _send(ws, {"type": "error", "text": text})
         except Exception:
             pass
     finally:

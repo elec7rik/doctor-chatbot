@@ -73,7 +73,7 @@ export function useChat(opts?: { onReplyComplete?: (spokenText: string) => void 
           },
         );
         if (res.status === 429) {
-          setBot("<p>You’re sending messages a little fast — give me a few seconds, then try again.</p>", []);
+          setBot("<p>The professor’s a bit swamped right now — give it a few seconds, then try again.</p>", []);
           return;
         }
         if (res.status === 413) {

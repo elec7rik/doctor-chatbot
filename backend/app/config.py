@@ -9,8 +9,13 @@ class Settings(BaseSettings):
     GCP_PROJECT_ID: str = "doctor-chatbot-507406"
     GCP_REGION: str = "europe-west4"
     GEMINI_MODEL: str = "gemini-2.5-flash"
-    # Live native-audio model for the "Talk to the Prof" voice call (europe-west4).
+    # Live native-audio model for the "Talk to the Prof" voice call.
     GEMINI_LIVE_MODEL: str = "gemini-live-2.5-flash-native-audio"
+    # Voice runs in its own region: europe-central2 has a dedicated native-audio
+    # quota lane (5,000 concurrent), whereas europe-west4 publishes no quota for
+    # this model and falls back on the contended shared global pool. Chat/TTS/STT
+    # stay on GCP_REGION; only the Live call uses this.
+    GEMINI_LIVE_REGION: str = "europe-central2"
     LIVE_VOICE: str = "Charon"        # matches the read-aloud Chirp voice family
     LIVE_MAX_CALL_SEC: int = 600      # bound a single call (Live caps ~10-15 min anyway)
 
