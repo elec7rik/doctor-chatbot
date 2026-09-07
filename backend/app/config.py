@@ -32,10 +32,12 @@ class Settings(BaseSettings):
     TEMPERATURE: float = 0.3
     MAX_OUTPUT_TOKENS: int = 2048
 
-    # Text-to-Speech (Google Cloud TTS). Studio = premium "voiceover" voices;
-    # Chirp3-HD = newest generative voices. Swap TTS_VOICE to any en-GB voice name.
+    # Text-to-Speech (Google Cloud TTS). Chirp3-HD "Charon" is the Cloud-TTS
+    # counterpart of the voice-call voice (LIVE_VOICE="Charon"), so read-aloud
+    # matches the live call as closely as the TTS engine allows. Swap TTS_VOICE
+    # to any en-GB voice name (e.g. en-GB-Studio-B for a Studio voiceover voice).
     TTS_LANGUAGE_CODE: str = "en-GB"
-    TTS_VOICE: str = "en-GB-Studio-B"
+    TTS_VOICE: str = "en-GB-Chirp3-HD-Charon"
     TTS_AUDIO_ENCODING: str = "MP3"
     TTS_SPEAKING_RATE: float = 1.0
 
