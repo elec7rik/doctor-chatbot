@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { GUIDE_CATALOG } from "@/content/guides/catalog";
 
 export const metadata: Metadata = {
@@ -11,7 +12,7 @@ export default function GuidesIndex() {
     <div className="guide guide-index">
       <header className="guide-top">
         <span className="guide-brand">My Longevity Hub</span>
-        <a className="guide-ask" href="/">Ask the professor →</a>
+        <Link className="guide-ask" href="/">Ask the professor →</Link>
       </header>
       <h1 className="gi-title">Guides</h1>
       <p className="gi-lede">Honest, plain-English reads on the things people actually ask about.</p>

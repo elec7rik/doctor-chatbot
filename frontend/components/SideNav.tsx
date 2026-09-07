@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { Mark } from "./Mark";
 import { ReadAloudSwitch } from "./ReadAloudSwitch";
 import { ThemeToggle } from "./ThemeToggle";
@@ -57,9 +58,9 @@ export function SideNav({
         <div className="rail-foot">
           <ReadAloudSwitch checked={readAloud.on} onChange={readAloud.toggle} />
           <div className="rail-foot-links">
-            <a className="rail-link" href="/guides">
+            <Link className="rail-link" href="/guides">
               Guides
-            </a>
+            </Link>
             <ThemeToggle />
           </div>
         </div>
