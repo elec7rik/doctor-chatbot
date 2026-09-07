@@ -5,7 +5,7 @@ import { createLiveSocket, liveUrl, type LiveSocket } from "./liveSocket";
 import { createAutoEnd, type AutoEnd } from "./autoEnd";
 import { reduce, view, isTap, initialState, type VoiceState } from "./voiceMachine";
 import { browserSpeak } from "./tts";
-import { buildReceipt, saveReceipt, type CallCard } from "./storage";
+import { type CallCard } from "./storage";
 
 interface WakeLockLike { release?: () => Promise<void> }
 
@@ -166,9 +166,6 @@ export function useVoiceCall(opts: { threadLen: number; onBeforeStart?: () => vo
     wakeRef.current = null;
     if (timerId.current) { clearInterval(timerId.current); timerId.current = null; }
     cancelAnimationFrame(meterRAF.current);
-    const ms = startedAt.current ? Date.now() - startedAt.current : 0;
-    const receipt = buildReceipt(opts.threadLen, ms, cardsRef.current);
-    if (receipt) saveReceipt(receipt);
     if (pushedRef.current && !fromPop) { try { window.history.back(); } catch { /* ignore */ } }
     pushedRef.current = false;
     setActive(false);

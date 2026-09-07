@@ -3,7 +3,6 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { useChat } from "@/lib/useChat";
 import { useReadAloud } from "@/lib/useReadAloud";
 import { useVoiceCall } from "@/lib/useVoiceCall";
-import { loadReceipts, type CallReceipt as Receipt } from "@/lib/storage";
 import { Header } from "./Header";
 import { SideNav } from "./SideNav";
 import { Disclaimer } from "./Disclaimer";
@@ -13,7 +12,6 @@ import { TypingDots } from "./TypingDots";
 import { LinkCard } from "./LinkCard";
 import { Composer } from "./Composer";
 import { VoiceStage } from "./VoiceStage";
-import { CallReceipt } from "./CallReceipt";
 import { guideTitle } from "@/content/guides/catalog";
 
 
@@ -21,23 +19,19 @@ export function ChatShell() {
   const readAloud = useReadAloud();
   const { messages, busy, started, send, newChat } = useChat({ onReplyComplete: readAloud.speakReply });
   const [drawer, setDrawer] = useState(false);
-  const [receipts, setReceipts] = useState<Receipt[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => { setReceipts(loadReceipts()); }, []);
 
   const voice = useVoiceCall({
     threadLen: messages.length,
     onBeforeStart: readAloud.stop,
-    onExit: () => setReceipts(loadReceipts()),
   });
 
-  const startNewChat = () => { newChat(); setReceipts([]); };
+  const startNewChat = () => { newChat(); };
 
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [messages, receipts]);
+  }, [messages]);
 
   return (
     <div className="app">
@@ -65,9 +59,6 @@ export function ChatShell() {
                     </div>
                   ))}
               </Fragment>
-            ))}
-            {receipts.map((r, i) => (
-              <CallReceipt key={`r-${r.ts}-${i}`} receipt={r} />
             ))}
           </div>
         </div>

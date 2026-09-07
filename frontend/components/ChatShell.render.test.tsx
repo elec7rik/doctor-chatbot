@@ -23,8 +23,6 @@ vi.mock("@/lib/useVoiceCall", () => ({
     onPointerDown: vi.fn(), onPointerUp: vi.fn(), onPointerCancel: vi.fn(),
   }),
 }));
-vi.mock("@/lib/storage", () => ({ loadReceipts: () => [] }));
-
 import { ChatShell } from "./ChatShell";
 
 describe("ChatShell guide-card anchoring", () => {

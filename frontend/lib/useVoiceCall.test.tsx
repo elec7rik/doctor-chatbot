@@ -43,7 +43,7 @@ describe("useVoiceCall", () => {
     act(() => handlers().onMessage?.({ type: "ready" }));
     expect(result.current.view.status).toBe("Tap to talk");
   });
-  it("a card is collected for the receipt, not shown as chat", async () => {
+  it("a card is collected for the voice stage, not shown as chat", async () => {
     const { result } = renderHook(() => useVoiceCall({ threadLen: 0 }));
     await act(async () => { await result.current.startCall(); });
     act(() => handlers().onMessage?.({ type: "card", url: "https://x.co", title: "Peptides 101", subtitle: "My Peptides" }));
